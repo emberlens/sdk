@@ -1,0 +1,75 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "file_name": "photo-1.jpg",
+      "width": 80,
+      "height": 60
+    },
+    {
+      "id": 2,
+      "file_name": "photo-2.jpg",
+      "width": 64,
+      "height": 48
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "bbox": [
+        8.0,
+        6.0,
+        32.0,
+        30.0
+      ],
+      "area": 960.0,
+      "iscrowd": 0
+    },
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 4,
+      "bbox": [
+        48.0,
+        30.0,
+        24.0,
+        18.0
+      ],
+      "area": 432.0,
+      "iscrowd": 0
+    },
+    {
+      "id": 3,
+      "image_id": 2,
+      "category_id": 2,
+      "bbox": [
+        16.0,
+        12.0,
+        32.0,
+        24.0
+      ],
+      "area": 768.0,
+      "iscrowd": 0
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Mango_Ripe_Alphonso"
+    },
+    {
+      "id": 2,
+      "name": "Mango_Unripe"
+    },
+    {
+      "id": 3,
+      "name": "Strawberry"
+    },
+    {
+      "id": 4,
+      "name": "Strawberry_Ripe"
+    }
+  ]
+}

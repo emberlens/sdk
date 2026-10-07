@@ -1,0 +1,134 @@
+{
+  "nhan_dataset_version": 1,
+  "name": "Fruit stand",
+  "source_format": "yolo",
+  "classes": [
+    "mango",
+    "strawberry"
+  ],
+  "sub_categories": [
+    {
+      "name": "condition",
+      "values": [
+        "ripe",
+        "unripe"
+      ]
+    },
+    {
+      "name": "type",
+      "values": [
+        "alphonso",
+        "kesar"
+      ]
+    }
+  ],
+  "labels": [
+    {
+      "name": "mango.ripe.alphonso",
+      "class": "mango",
+      "attributes": {
+        "condition": "ripe",
+        "type": "alphonso"
+      }
+    },
+    {
+      "name": "mango.unripe",
+      "class": "mango",
+      "attributes": {
+        "condition": "unripe"
+      }
+    },
+    {
+      "name": "strawberry",
+      "class": "strawberry",
+      "attributes": {}
+    },
+    {
+      "name": "strawberry.ripe",
+      "class": "strawberry",
+      "attributes": {
+        "condition": "ripe"
+      }
+    }
+  ],
+  "images": [
+    {
+      "id": "photo-1",
+      "file": "images/train/photo-1.jpg",
+      "width": 80,
+      "height": 60,
+      "split": "train",
+      "boxes": [
+        {
+          "label": "mango.ripe.alphonso",
+          "class": "mango",
+          "attributes": {
+            "condition": "ripe",
+            "type": "alphonso"
+          },
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.4,
+          "h": 0.5
+        },
+        {
+          "label": "strawberry.ripe",
+          "class": "strawberry",
+          "attributes": {
+            "condition": "ripe"
+          },
+          "x": 0.6,
+          "y": 0.5,
+          "w": 0.3,
+          "h": 0.3
+        }
+      ]
+    },
+    {
+      "id": "photo-2",
+      "file": "images/train/photo-2.jpg",
+      "width": 64,
+      "height": 48,
+      "split": "train",
+      "boxes": [
+        {
+          "label": "mango.unripe",
+          "class": "mango",
+          "attributes": {
+            "condition": "unripe"
+          },
+          "x": 0.25,
+          "y": 0.25,
+          "w": 0.5,
+          "h": 0.5
+        }
+      ]
+    },
+    {
+      "id": "photo-3",
+      "file": "images/test/photo-3.jpg",
+      "width": 60,
+      "height": 80,
+      "split": "test",
+      "boxes": [
+        {
+          "label": "strawberry",
+          "class": "strawberry",
+          "attributes": {},
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ]
+    },
+    {
+      "id": "photo-4",
+      "file": "images/val/photo-4.jpg",
+      "width": 40,
+      "height": 40,
+      "split": "val",
+      "boxes": []
+    }
+  ]
+}

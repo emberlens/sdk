@@ -1,0 +1,23 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "file_name": "photo-4.jpg",
+      "width": 40,
+      "height": 40
+    }
+  ],
+  "annotations": [],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Mango",
+      "supercategory": "fruit"
+    },
+    {
+      "id": 2,
+      "name": "Strawberry",
+      "supercategory": "fruit"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+python/.venv/
+**/__pycache__/
+*.egg-info/
+# Folders made by ./nhan next to an export zip, and default outputs
+*-preview*.html
+*-crops*/
+*-model*/
+predictions*.json
+predictions*.html

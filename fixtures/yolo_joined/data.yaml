@@ -1,0 +1,6 @@
+path: .
+train: images/train
+val: images/val
+test: images/test
+nc: 4
+names: [mango.ripe.alphonso, mango.unripe, strawberry, strawberry.ripe]

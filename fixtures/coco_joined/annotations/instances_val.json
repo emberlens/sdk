@@ -1,0 +1,29 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "file_name": "photo-4.jpg",
+      "width": 40,
+      "height": 40
+    }
+  ],
+  "annotations": [],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Mango_Ripe_Alphonso"
+    },
+    {
+      "id": 2,
+      "name": "Mango_Unripe"
+    },
+    {
+      "id": 3,
+      "name": "Strawberry"
+    },
+    {
+      "id": 4,
+      "name": "Strawberry_Ripe"
+    }
+  ]
+}

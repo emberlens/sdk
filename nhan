@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Nhan SDK launcher (macOS / Linux).
+# The first run makes a private Python environment in python/.venv.
+# Nothing is installed system-wide. Start with:  ./nhan help
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV="$HERE/python/.venv"
+PY="$VENV/bin/python"
+
+if [ ! -x "$PY" ]; then
+  BASE=""
+  for c in python3 python; do
+    if command -v "$c" >/dev/null 2>&1 &&
+       "$c" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' 2>/dev/null; then
+      BASE="$c"; break
+    fi
+  done
+  if [ -z "$BASE" ]; then
+    echo "The Nhan SDK needs Python 3.9 or newer."
+    echo "Get it from https://www.python.org/downloads/ and run this again."
+    exit 1
+  fi
+  echo "First run: setting up the Nhan SDK (a few seconds)..."
+  if ! "$BASE" -m venv "$VENV" >/dev/null 2>&1; then
+    # Some Python builds cannot add pip to a new environment. Start again
+    # with uv if present, else without pip (the core SDK does not need it).
+    rm -rf "$VENV"
+    if command -v uv >/dev/null 2>&1; then
+      uv venv --seed --quiet --python "$BASE" "$VENV"
+    else
+      "$BASE" -m venv --without-pip "$VENV"
+    fi
+  fi
+  if [ ! -x "$PY" ]; then
+    echo "Could not create $VENV. Install Python from https://www.python.org/downloads/"
+    exit 1
+  fi
+fi
+
+export PYTHONPATH="$HERE/python${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PY" -m nhan "$@"

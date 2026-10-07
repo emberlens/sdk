@@ -1,0 +1,117 @@
+{
+  "nhan_dataset_version": 1,
+  "name": "Fruit stand",
+  "source_format": "coco",
+  "classes": [
+    "Mango",
+    "Strawberry"
+  ],
+  "sub_categories": [
+    {
+      "name": "Condition",
+      "values": [
+        "Ripe",
+        "Unripe"
+      ]
+    },
+    {
+      "name": "Type",
+      "values": [
+        "Alphonso",
+        "Kesar"
+      ]
+    }
+  ],
+  "labels": [
+    {
+      "name": "Mango",
+      "class": "Mango",
+      "attributes": {}
+    },
+    {
+      "name": "Strawberry",
+      "class": "Strawberry",
+      "attributes": {}
+    }
+  ],
+  "images": [
+    {
+      "id": "photo-1",
+      "file": "images/train/photo-1.jpg",
+      "width": 80,
+      "height": 60,
+      "split": "train",
+      "boxes": [
+        {
+          "label": "Mango",
+          "class": "Mango",
+          "attributes": {
+            "Condition": "Ripe",
+            "Type": "Alphonso"
+          },
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.4,
+          "h": 0.5
+        },
+        {
+          "label": "Strawberry",
+          "class": "Strawberry",
+          "attributes": {
+            "Condition": "Ripe"
+          },
+          "x": 0.6,
+          "y": 0.5,
+          "w": 0.3,
+          "h": 0.3
+        }
+      ]
+    },
+    {
+      "id": "photo-2",
+      "file": "images/train/photo-2.jpg",
+      "width": 64,
+      "height": 48,
+      "split": "train",
+      "boxes": [
+        {
+          "label": "Mango",
+          "class": "Mango",
+          "attributes": {
+            "Condition": "Unripe"
+          },
+          "x": 0.25,
+          "y": 0.25,
+          "w": 0.5,
+          "h": 0.5
+        }
+      ]
+    },
+    {
+      "id": "photo-3",
+      "file": "images/test/photo-3.jpg",
+      "width": 60,
+      "height": 80,
+      "split": "test",
+      "boxes": [
+        {
+          "label": "Strawberry",
+          "class": "Strawberry",
+          "attributes": {},
+          "x": 0.0,
+          "y": 0.0,
+          "w": 1.0,
+          "h": 1.0
+        }
+      ]
+    },
+    {
+      "id": "photo-4",
+      "file": "images/val/photo-4.jpg",
+      "width": 40,
+      "height": 40,
+      "split": "val",
+      "boxes": []
+    }
+  ]
+}
