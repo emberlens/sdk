@@ -4,39 +4,108 @@
   "title": "Nhan dataset (dataset.json)",
   "description": "One file with every photo and box, in the same shape for every source format. Written by `./nhan convert --to json` and used as the expected result in sdk/fixtures/expected/. See sdk/SPEC.md section 4.",
   "type": "object",
-  "required": ["nhan_dataset_version", "name", "source_format", "classes", "sub_categories", "labels", "images"],
+  "required": [
+    "nhan_dataset_version",
+    "name",
+    "source_format",
+    "classes",
+    "sub_categories",
+    "labels",
+    "images"
+  ],
   "properties": {
-    "nhan_dataset_version": { "type": "integer", "const": 1 },
-    "name": { "type": "string" },
-    "source_format": { "type": "string", "enum": ["coco", "yolo", "voc", "model"] },
-    "classes": { "type": "array", "items": { "type": "string" } },
+    "nhan_dataset_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "name": {
+      "type": "string"
+    },
+    "source_format": {
+      "type": "string",
+      "enum": [
+        "coco",
+        "yolo",
+        "voc",
+        "model"
+      ]
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "sub_categories": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "values"],
+        "required": [
+          "name",
+          "values"
+        ],
         "properties": {
-          "name": { "type": "string" },
-          "values": { "type": "array", "items": { "type": "string" } }
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "labels": {
       "type": "array",
-      "items": { "$ref": "#/$defs/label" }
+      "items": {
+        "$ref": "#/$defs/label"
+      }
     },
     "images": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "file", "width", "height", "split", "boxes"],
+        "required": [
+          "id",
+          "file",
+          "width",
+          "height",
+          "split",
+          "boxes"
+        ],
         "properties": {
-          "id": { "type": "string", "description": "The photo id; the file name without extension." },
-          "file": { "type": "string", "description": "Path of the photo, relative to this file, with / separators." },
-          "width": { "type": "integer", "minimum": 0 },
-          "height": { "type": "integer", "minimum": 0 },
-          "split": { "type": "string", "enum": ["train", "val", "test"] },
-          "boxes": { "type": "array", "items": { "$ref": "#/$defs/box" } }
+          "id": {
+            "type": "string",
+            "description": "The photo id; the file name without extension."
+          },
+          "file": {
+            "type": "string",
+            "description": "Path of the photo, relative to this file, with / separators."
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "train",
+              "val",
+              "test"
+            ]
+          },
+          "boxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/box"
+            }
+          }
         }
       }
     }
@@ -44,25 +113,83 @@
   "$defs": {
     "label": {
       "type": "object",
-      "required": ["name", "class", "attributes"],
+      "required": [
+        "name",
+        "class",
+        "attributes"
+      ],
       "properties": {
-        "name": { "type": "string" },
-        "class": { "type": "string" },
-        "attributes": { "type": "object", "additionalProperties": { "type": "string" } }
+        "name": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
       }
     },
     "box": {
       "type": "object",
-      "required": ["label", "class", "attributes", "x", "y", "w", "h"],
-      "description": "x, y = top-left corner; w, h = size. All normalised 0..1 of the photo size, 6 decimals.",
+      "required": [
+        "label",
+        "class",
+        "attributes",
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "description": "x, y = top-left corner; w, h = size. All normalised 0..1 of the photo size, 6 decimals. A polygon label also has `polygon`; x, y, w, h is then the box around it.",
       "properties": {
-        "label": { "type": "string" },
-        "class": { "type": "string" },
-        "attributes": { "type": "object", "additionalProperties": { "type": "string" } },
-        "x": { "type": "number", "minimum": 0, "maximum": 1 },
-        "y": { "type": "number", "minimum": 0, "maximum": 1 },
-        "w": { "type": "number", "minimum": 0, "maximum": 1 },
-        "h": { "type": "number", "minimum": 0, "maximum": 1 }
+        "label": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "w": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "h": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "polygon": {
+          "type": "array",
+          "description": "Polygon corners [[x, y], ...], normalised 0..1, at least 3. Absent for a box.",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
       }
     }
   }

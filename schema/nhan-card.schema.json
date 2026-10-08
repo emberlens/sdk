@@ -4,35 +4,98 @@
   "title": "Nhan dataset card (nhan.json)",
   "description": "Written by the Nhan app (and the SDK) next to every export. Says what each label name in the export means. See sdk/SPEC.md section 3.",
   "type": "object",
-  "required": ["nhan_card_version", "format", "label_style", "classes", "sub_categories", "labels"],
+  "required": [
+    "nhan_card_version",
+    "format",
+    "label_style",
+    "classes",
+    "sub_categories",
+    "labels"
+  ],
   "properties": {
-    "nhan_card_version": { "type": "integer", "const": 1, "description": "Layout version of this file. Readers must refuse versions they do not know." },
-    "created_at": { "type": "string", "description": "UTC time of the export, ISO 8601." },
+    "nhan_card_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Layout version of this file. Readers must refuse versions they do not know."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "UTC time of the export, ISO 8601."
+    },
     "project": {
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "category": { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
       }
     },
-    "format": { "type": "string", "enum": ["coco", "yolo", "voc"] },
+    "format": {
+      "type": "string",
+      "enum": [
+        "coco",
+        "yolo",
+        "voc"
+      ]
+    },
     "label_style": {
       "type": "string",
-      "enum": ["single", "joined", "separate_fields"],
+      "enum": [
+        "single",
+        "joined",
+        "separate_fields"
+      ],
       "description": "single: no sub-categories. joined: values are part of the label name (mango_ripe). separate_fields: the label is the class; values are in COCO annotations[].attributes or VOC <attributes>."
     },
-    "separator": { "type": "string", "description": "Text between the parts of a joined name, e.g. _ or ." },
-    "lowercase": { "type": "boolean", "description": "True when every name in the export was written in lower case." },
-    "root_category": { "type": "string", "description": "What the main class is called, e.g. fruit. COCO supercategory in separate_fields style." },
-    "classes": { "type": "array", "items": { "type": "string" }, "description": "Main classes in project order." },
+    "shapes": {
+      "type": "string",
+      "enum": [
+        "boxes",
+        "polygons",
+        "mixed"
+      ],
+      "description": "Which label shapes the export holds. Polygons: COCO annotations[].segmentation, YOLO segmentation lines (a box is written as its 4 corners when the export has polygons), VOC only the box around each polygon."
+    },
+    "separator": {
+      "type": "string",
+      "description": "Text between the parts of a joined name, e.g. _ or ."
+    },
+    "lowercase": {
+      "type": "boolean",
+      "description": "True when every name in the export was written in lower case."
+    },
+    "root_category": {
+      "type": "string",
+      "description": "What the main class is called, e.g. fruit. COCO supercategory in separate_fields style."
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Main classes in project order."
+    },
     "sub_categories": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "values"],
+        "required": [
+          "name",
+          "values"
+        ],
         "properties": {
-          "name": { "type": "string" },
-          "values": { "type": "array", "items": { "type": "string" } }
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       },
       "description": "In order. The order is the order of the parts in a joined name."
@@ -42,13 +105,24 @@
       "description": "Every label name used in the export files, in export order. For YOLO the position is the class index.",
       "items": {
         "type": "object",
-        "required": ["name", "class", "attributes"],
+        "required": [
+          "name",
+          "class",
+          "attributes"
+        ],
         "properties": {
-          "name": { "type": "string", "description": "Exactly as in the files." },
-          "class": { "type": "string" },
+          "name": {
+            "type": "string",
+            "description": "Exactly as in the files."
+          },
+          "class": {
+            "type": "string"
+          },
           "attributes": {
             "type": "object",
-            "additionalProperties": { "type": "string" },
+            "additionalProperties": {
+              "type": "string"
+            },
             "description": "Sub-category -> value carried by the name. A missing key means no value. Empty in separate_fields style."
           }
         }
@@ -57,20 +131,52 @@
     "split": {
       "type": "object",
       "properties": {
-        "train": { "type": "number", "minimum": 0, "maximum": 1 },
-        "val": { "type": "number", "minimum": 0, "maximum": 1 },
-        "test": { "type": "number", "minimum": 0, "maximum": 1 }
+        "train": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "val": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "test": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
       }
     },
-    "seed": { "type": "integer" },
+    "seed": {
+      "type": "integer"
+    },
     "images": {
       "type": "object",
       "properties": {
-        "longest_side": { "type": ["integer", "null"] },
-        "colour_space": { "type": "string", "enum": ["rgb", "gray"] },
-        "jpeg_quality": { "type": "integer", "minimum": 1, "maximum": 100 }
+        "longest_side": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "colour_space": {
+          "type": "string",
+          "enum": [
+            "rgb",
+            "gray"
+          ]
+        },
+        "jpeg_quality": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
       }
     },
-    "written_by": { "type": "string", "description": "Set by tools other than the app, e.g. nhan-sdk." }
+    "written_by": {
+      "type": "string",
+      "description": "Set by tools other than the app, e.g. nhan-sdk."
+    }
   }
 }

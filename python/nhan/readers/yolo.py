@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple
 
 from ..errors import NhanError
 from ..imagesize import image_size
-from ..model import SPLITS, Box, Image
+from ..model import SPLITS, Box, Image, box_from_polygon
 
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
@@ -87,6 +87,18 @@ def parse_data_yaml(text: str) -> Dict[str, object]:
     return out
 
 
+def _as_rectangle(pts):
+    """(x, y, w, h) if the 4 corners are an upright box, clockwise from
+    top-left (how Nhan writes a box in a segmentation file), else None."""
+    if len(pts) != 4:
+        return None
+    (x0, y0), (x1, y1), (x2, y2), (x3, y3) = pts
+    e = 1e-6
+    if abs(y0 - y1) < e and abs(x1 - x2) < e and abs(y2 - y3) < e and abs(x3 - x0) < e and x1 > x0 and y2 > y1:
+        return (x0, y0, x1 - x0, y2 - y1)
+    return None
+
+
 def read(root: Path) -> Tuple[List[Image], List[str]]:
     yaml_path = root / "data.yaml"
     if not yaml_path.is_file():
@@ -122,8 +134,19 @@ def read(root: Path) -> Tuple[List[Image], List[str]]:
                     if len(fields) < 5:
                         continue
                     index = int(float(fields[0]))
-                    cx, cy, w, h = (float(v) for v in fields[1:5])
                     name = names[index] if 0 <= index < len(names) else str(index)
+                    if len(fields) > 5:
+                        # Segmentation line: corners. A box written as its 4
+                        # corners (mixed datasets) becomes a box again.
+                        vals = [float(v) for v in fields[1:]]
+                        pts = [(vals[i], vals[i + 1]) for i in range(0, len(vals) - 1, 2)]
+                        rect = _as_rectangle(pts)
+                        if rect:
+                            img.boxes.append(Box(label=name, cls=name, x=rect[0], y=rect[1], w=rect[2], h=rect[3]))
+                        else:
+                            img.boxes.append(box_from_polygon(name, name, pts))
+                        continue
+                    cx, cy, w, h = (float(v) for v in fields[1:5])
                     img.boxes.append(
                         Box(label=name, cls=name, x=cx - w / 2, y=cy - h / 2, w=w, h=h)
                     )

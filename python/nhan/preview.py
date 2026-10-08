@@ -26,6 +26,7 @@ select {{ font:inherit; padding:4px 8px; margin-right:8px; }}
 .pic {{ position:relative; }}
 .pic img {{ display:block; width:100%; height:auto; }}
 .pic svg {{ position:absolute; inset:0; width:100%; height:100%; }}
+.pic svg * {{ vector-effect:non-scaling-stroke; }}
 .cap {{ padding:8px 10px; font-size:13px; color:var(--muted); }}
 .tag {{ display:inline-block; padding:1px 6px; border-radius:6px; color:#fff; margin:2px 2px 0 0; font-size:12px; }}
 </style></head><body>
@@ -60,15 +61,22 @@ def write_preview(ds, path="preview.html", limit: int = 500) -> Path:
         for b in img.boxes:
             c = colour.get(b.label, "#888")
             text = html.escape(b.label + "".join(f" · {v}" for v in b.attributes.values() if b.label == b.cls))
-            rects.append(
-                f'<rect x="{b.x * 100:.3f}%" y="{b.y * 100:.3f}%" width="{b.w * 100:.3f}%" '
-                f'height="{b.h * 100:.3f}%" fill="none" stroke="{c}" stroke-width="2"><title>{text}</title></rect>'
-            )
+            if b.polygon is not None:
+                pts = " ".join(f"{px:.5f},{py:.5f}" for px, py in b.polygon)
+                rects.append(
+                    f'<polygon points="{pts}" fill="{c}" fill-opacity="0.25" stroke="{c}" '
+                    f'stroke-width="2"><title>{text}</title></polygon>'
+                )
+            else:
+                rects.append(
+                    f'<rect x="{b.x:.5f}" y="{b.y:.5f}" width="{b.w:.5f}" height="{b.h:.5f}" '
+                    f'fill="none" stroke="{c}" stroke-width="2"><title>{text}</title></rect>'
+                )
             tags.append(f'<span class="tag" style="background:{c}">{text}</span>')
         cards.append(
             f'<div class="card" data-split="{img.split}" data-labels="{html.escape("|".join(sorted({b.label for b in img.boxes})))}">'
             f'<div class="pic"><img loading="lazy" src="{html.escape(src)}" alt="{html.escape(img.id)}">'
-            f'<svg preserveAspectRatio="none">{"".join(rects)}</svg></div>'
+            f'<svg viewBox="0 0 1 1" preserveAspectRatio="none">{"".join(rects)}</svg></div>'
             f'<div class="cap">{html.escape(img.id)} · {img.split}<br>{"".join(tags) or "no boxes"}</div></div>'
         )
     meta = f"{ds.format.upper()} · {len(ds.images)} photos · {ds.box_count} boxes"

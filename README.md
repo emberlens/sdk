@@ -76,7 +76,9 @@ Try it now with the sample export that ships with the SDK:
 | Check that the SDK works | `./nhan selftest` |
 | See all commands | `./nhan help` |
 
-`EXPORT` is the zip from the app, or the folder it unzips to. The SDK unzips a zip once, into a folder next to it with the same name.
+`EXPORT` is the zip from the app, or the folder it unzips to.
+
+**Polygons** (outlines drawn in the app) are kept by `convert --to coco` and `--to yolo`, and drawn by `preview`. Pascal VOC has no place for them, so `--to voc` keeps the box around each one. The SDK unzips a zip once, into a folder next to it with the same name.
 
 Results go into the folder you are in, with clear names. Examples: `fruit-stand-coco-yolo/`, `fruit-stand-coco-preview.html`. The SDK never overwrites: if a name exists, it adds `-2`, `-3`, and so on.
 
@@ -194,6 +196,7 @@ Ready-made examples are in [`examples/`](examples/):
 | `ds.images`, `for photo in ds` | photos: `.id`, `.path`, `.width`, `.height`, `.split`, `.boxes` |
 | `box.cls`, `box.label`, `box.attributes`, `box.get("condition")` | what the box is |
 | `box.x, box.y, box.w, box.h` | position, 0 to 1, top-left corner (`box.pixels(w, h)` for pixels) |
+| `box.polygon`, `box.is_polygon`, `box.corners()` | polygon corners `[(x, y), …]` (0 to 1), or `None` for a box |
 | `ds.filter(cls=…, split=…, **values)` | keep matching boxes (`condition=None` = no value) |
 | `ds.split("train")`, `ds.resplit(0.8, 0.1, 0.1)` | splits |
 | `ds.relabel("class" / "joined" / "condition")` | change the labels |

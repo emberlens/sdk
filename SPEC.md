@@ -1,6 +1,6 @@
 # Nhan export format and SDK specification
 
-Version 1, 2026-10-08. This file is for people who write a Nhan reader in another language, or check one. The Python SDK in `python/nhan/` is the reference implementation. The files in `fixtures/` are the test data.
+Version 1, 2026-10-08 (polygons added the same day). This file is for people who write a Nhan reader in another language, or check one. The Python SDK in `python/nhan/` is the reference implementation. The files in `fixtures/` are the test data.
 
 ## 1. Words
 
@@ -28,6 +28,7 @@ annotations/instances_{train,val,test}.json
 - One JSON per split: `images[] {id, file_name, width, height}`, `annotations[] {id, image_id, category_id, bbox, area, iscrowd}`, `categories[] {id, name[, supercategory]}`.
 - `image_id` and `category_id` are 1-based, and only valid inside one file.
 - `bbox = [x, y, w, h]` in pixels of the exported image, top-left origin, 2 decimals.
+- A polygon label adds `segmentation: [[x1, y1, x2, y2, …]]`: one ring of pixel corners, 2 decimals. Its `area` is the polygon's area (shoelace formula). `bbox` is the box around the polygon. A box has no `segmentation` key.
 - In the separate-fields style, an annotation may have `attributes: {sub-category: value}`. A missing key means no value. A category may have `supercategory`, which is the project's root category name.
 
 ### 2.2 YOLO
@@ -41,6 +42,7 @@ labels/{train,val,test}/<id>.txt
 
 - `data.yaml`: `path: .`, `train: images/train`, `val: images/val`, `test: images/test`, `nc: N`, `names: [ … ]`. Names are a YAML flow list. A name is single-quoted when it is not a plain YAML word (`'it''s'` doubles the quote).
 - Each `.txt` line is `<index> <cx> <cy> <w> <h>`: normalised 0..1, centre-based, 6 decimals. A photo with no boxes has an empty file.
+- **When the export has any polygon**, every line is a YOLO segmentation line instead: `<index> x1 y1 x2 y2 …` (normalised corners, 6 decimals). A box is written as its 4 corners, clockwise from the top-left: `x y  x+w y  x+w y+h  x y+h`. Readers turn exactly that upright rectangle back into a box.
 - YOLO has no place for values, so labels are always joined (§3.2).
 
 ### 2.3 Pascal VOC
@@ -54,6 +56,7 @@ ImageSets/Main/{train,val,test}.txt     one photo id per line
 
 - XML: `<annotation><filename/><size><width/><height/><depth/></size><object><name/><bndbox><xmin/><ymin/><xmax/><ymax/></bndbox>[<attributes>]</object>…</annotation>`.
 - Box corners are integer pixels, **1-based and inclusive**: `xmin = round(x·W) + 1`, `xmax = round((x + w)·W)`.
+- VOC XML has no polygon field. A polygon is written as the box around it (`<bndbox>`). Use COCO or YOLO to keep outlines.
 - Separate-fields values (CVAT style): `<attributes><attribute><name>Condition</name><value>Ripe</value></attribute>…</attributes>`.
 
 ### 2.4 Splits
@@ -87,6 +90,7 @@ Schema: [`schema/nhan-card.schema.json`](schema/nhan-card.schema.json). The app 
 - Every name in the card is written exactly as in the files. When `lowercase` is true, all names are lower case.
 - A sub-category with no value is **absent** from `attributes`. The text "none" or "null" never appears as a value.
 - Readers must refuse a `nhan_card_version` they do not know.
+- `shapes` is `boxes`, `polygons` or `mixed`.
 
 ### 3.2 Label styles
 
@@ -105,10 +109,10 @@ Every reader produces the same model, whatever the source format:
 ```
 Dataset  name, source_format, classes[], sub_categories[{name, values[]}], labels[{name, class, attributes}], images[]
 Image    id, file, width, height, split ("train" | "val" | "test"), boxes[]
-Box      label, class, attributes{sub-category: value}, x, y, w, h
+Box      label, class, attributes{sub-category: value}, x, y, w, h, polygon? [[x, y], …]
 ```
 
-`x, y` is the top-left corner. `x, y, w, h` are normalised 0..1 of the image size. `dataset.json` is this model as JSON. Its schema is [`schema/nhan-dataset.schema.json`](schema/nhan-dataset.schema.json). `file` is relative to the JSON file, with `/` separators, and numbers have 6 decimals.
+`x, y` is the top-left corner. `x, y, w, h` are normalised 0..1 of the image size. A polygon label also has `polygon` (at least 3 corners, normalised). `x, y, w, h` is then the box around it. A box has no `polygon` key. `dataset.json` is this model as JSON. Its schema is [`schema/nhan-dataset.schema.json`](schema/nhan-dataset.schema.json). `file` is relative to the JSON file, with `/` separators, and numbers have 6 decimals.
 
 ### 4.1 Coordinates per format
 
@@ -117,6 +121,8 @@ Box      label, class, attributes{sub-category: value}, x, y, w, h
 | COCO | `x = bx/W, y = by/H, w = bw/W, h = bh/H` |
 | YOLO | `x = cx − w/2, y = cy − h/2` (w, h as written) |
 | VOC | `x = (xmin − 1)/W, y = (ymin − 1)/H, w = (xmax − xmin + 1)/W, h = (ymax − ymin + 1)/H` |
+| COCO polygon | corner `i` = `(seg[0][2i]/W, seg[0][2i+1]/H)`; box = bounds of the corners. Only the first ring is read; RLE masks stay boxes. |
+| YOLO segmentation | corners as written; an upright 4-corner rectangle (§2.2) is a box |
 
 YOLO files do not store the image size. Read it from the image header (JPEG SOF marker, PNG IHDR). This needs no image library.
 
@@ -144,6 +150,7 @@ Writers produce the layouts of §2 and a new card (with `"written_by"`). Rules:
 - Do not write into a folder that is not empty.
 - **YOLO:** if a box has values but its label is its class (the separate-fields style), write the joined name (`class` + values, card `separator`, default `_`). No value is lost.
 - **COCO / VOC:** write per-box attributes only when the label equals the class (the separate-fields style).
+- **Polygons:** COCO writes `segmentation` and the polygon `area`. YOLO switches every line to segmentation lines when any box has a polygon. VOC writes the box.
 - **Card labels:** a label's entry carries `class` and `attributes` only when every box with that label agrees on them. Otherwise write `{"name": L, "class": L, "attributes": {}}`. This happens after relabelling by a value, for example. A reader must never get values that are not true for every box.
 
 ## 7. Checking a port
@@ -159,7 +166,7 @@ Writers produce the layouts of §2 and a new card (with `"written_by"`). Rules:
 | `voc_fields` | VOC | separate fields | `<attributes>` |
 | `voc_joined` | VOC | joined, `_` | |
 
-Data: 4 photos (80×60, 64×48, 60×80, 40×40), split 2/1/1. One photo has no boxes. Values: `Type` only fits Mango, and some boxes have no value.
+Data: 4 photos (80×60, 64×48, 60×80, 40×40), split 2/1/1. One photo has no boxes. Values: `Type` only fits Mango, and some boxes have no value. The unripe mango on `photo-2` is a **polygon** (a diamond inside its box), so `shapes` is `mixed`. COCO and YOLO keep the polygon; VOC gives its box.
 
 **A port is correct when**, for every fixture, its model written as `dataset.json` (images sorted by `id`, paths relative to the fixture folder) equals `fixtures/expected/<fixture>.json`. Compare numbers after rounding to 6 decimals.
 

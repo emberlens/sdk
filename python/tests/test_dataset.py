@@ -79,6 +79,38 @@ class WriteTest(TempDirCase):
         ripe = [b for b in back.boxes if b.label == "Ripe"]
         self.assertTrue(all(b.cls == "Ripe" and b.attributes == {} for b in ripe))
 
+    def test_polygons_survive_coco_and_yolo_and_become_boxes_in_voc(self):
+        ds = nhan.load(FIXTURES / "coco_joined")
+        diamond = [(0.5, 0.25), (0.75, 0.5), (0.5, 0.75), (0.25, 0.5)]
+
+        def poly_of(d):
+            return [b.polygon for b in d.boxes if b.polygon is not None]
+
+        for fmt in ("coco", "yolo"):
+            with self.subTest(fmt):
+                back = nhan.load(getattr(ds, f"to_{fmt}")(self.tmp / fmt))
+                self.assertEqual([[(round(x, 6), round(y, 6)) for x, y in p] for p in poly_of(back)], [diamond])
+                self.assertEqual(sum(1 for b in back.boxes if b.polygon is None), 3)
+        voc = nhan.load(ds.to_voc(self.tmp / "voc"))
+        self.assertEqual(poly_of(voc), [])
+        self.assertEqual(snapshot(voc, with_label=False), snapshot(ds, with_label=False))
+
+    def test_polygon_area_in_coco(self):
+        import json
+
+        out = nhan.load(FIXTURES / "coco_joined").to_coco(self.tmp / "c")
+        data = json.loads((out / "annotations" / "instances_train.json").read_text())
+        poly = [a for a in data["annotations"] if "segmentation" in a][0]
+        # diamond in a 32 x 24 px box: half of it
+        self.assertAlmostEqual(poly["area"], 384.0, places=2)
+
+    def test_box_helpers(self):
+        b = [x for x in nhan.load(FIXTURES / "coco_joined").boxes if x.is_polygon][0]
+        self.assertEqual(len(b.corners()), 4)
+        self.assertEqual(b.polygon_pixels(64, 48)[0], (32.0, 12.0))
+        plain = [x for x in nhan.load(FIXTURES / "coco_joined").boxes if not x.is_polygon][0]
+        self.assertEqual(len(plain.corners()), 4)
+
     def test_refuses_a_folder_that_is_not_empty(self):
         (self.tmp / "busy").mkdir()
         (self.tmp / "busy" / "x").write_text("x")
@@ -96,7 +128,8 @@ class WriteTest(TempDirCase):
     def test_preview_page(self):
         page = nhan.load(FIXTURES / "coco_joined").preview(self.tmp / "p.html")
         text = page.read_text()
-        self.assertEqual(text.count("<rect "), 4)
+        self.assertEqual(text.count("<rect "), 3)
+        self.assertEqual(text.count("<polygon "), 1)
         self.assertIn("../", text)  # relative image paths
         self.assertIn("prefers-color-scheme", text)
 

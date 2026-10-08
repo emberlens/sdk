@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from ..errors import NhanError
-from ..model import SPLITS, Box, Image
+from ..model import SPLITS, Box, Image, box_from_polygon
 
 
 def _split_of(json_path: Path) -> str:
@@ -67,6 +67,15 @@ def read(root: Path) -> Tuple[List[Image], List[str]]:
                 continue
             x, y, w, h = a["bbox"]
             name = cats.get(a["category_id"], str(a["category_id"]))
+            attrs = {str(k): str(v) for k, v in (a.get("attributes") or {}).items()}
+            seg = a.get("segmentation")
+            # Polygon form: [[x1, y1, x2, y2, ...], ...]. The first ring is
+            # the outline (Nhan writes one). Pixel masks (RLE) stay boxes.
+            if isinstance(seg, list) and seg and isinstance(seg[0], list) and len(seg[0]) >= 6:
+                ring = seg[0]
+                pts = [(ring[i] / img.width, ring[i + 1] / img.height) for i in range(0, len(ring) - 1, 2)]
+                img.boxes.append(box_from_polygon(name, name, pts, attrs))
+                continue
             img.boxes.append(
                 Box(
                     label=name,
@@ -75,7 +84,7 @@ def read(root: Path) -> Tuple[List[Image], List[str]]:
                     y=y / img.height,
                     w=w / img.width,
                     h=h / img.height,
-                    attributes={str(k): str(v) for k, v in (a.get("attributes") or {}).items()},
+                    attributes=attrs,
                 )
             )
     return images, label_order

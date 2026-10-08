@@ -64,6 +64,12 @@ def _style(ds: Dataset) -> str:
     return "single"
 
 
+def _shapes(ds: Dataset) -> str:
+    poly = any(b.polygon is not None for b in ds.boxes)
+    box = any(b.polygon is None for b in ds.boxes)
+    return "mixed" if poly and box else ("polygons" if poly else "boxes")
+
+
 def card_for(ds: Dataset, fmt: str) -> dict:
     """A nhan.json card that describes `ds` as written in `fmt`."""
     old = ds.card or {}
@@ -73,6 +79,7 @@ def card_for(ds: Dataset, fmt: str) -> dict:
         "project": old.get("project") or {"name": ds.name, "category": ""},
         "format": fmt,
         "label_style": _style(ds),
+        "shapes": _shapes(ds),
         "separator": old.get("separator", "_"),
         "lowercase": bool(old.get("lowercase", False)),
         "root_category": old.get("root_category", "class"),
@@ -107,14 +114,15 @@ def _write_coco(ds: Dataset, out: Path, labels: List[str]) -> None:
             )
             for b in img.boxes:
                 w, h = b.w * img.width, b.h * img.height
-                ann = {
-                    "id": ann_id,
-                    "image_id": img_id,
-                    "category_id": index[b.label],
-                    "bbox": [round(b.x * img.width, 2), round(b.y * img.height, 2), round(w, 2), round(h, 2)],
-                    "area": round(w * h, 2),
-                    "iscrowd": 0,
-                }
+                ann = {"id": ann_id, "image_id": img_id, "category_id": index[b.label]}
+                area = w * h
+                if b.polygon is not None:
+                    pts = b.polygon_pixels(img.width, img.height)
+                    ann["segmentation"] = [[round(v, 2) for p in pts for v in p]]
+                    area = abs(sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1] for i in range(len(pts)))) / 2
+                ann["bbox"] = [round(b.x * img.width, 2), round(b.y * img.height, 2), round(w, 2), round(h, 2)]
+                ann["area"] = round(area, 2)
+                ann["iscrowd"] = 0
                 if b.attributes and _fields_style(b):
                     ann["attributes"] = dict(b.attributes)
                 data["annotations"].append(ann)
@@ -134,12 +142,20 @@ def _write_yolo(ds: Dataset, out: Path, labels: List[str]) -> None:
     for split in SPLITS:
         (out / "images" / split).mkdir(parents=True, exist_ok=True)
         (out / "labels" / split).mkdir(parents=True, exist_ok=True)
+    # Any polygon: every line is a segmentation line (boxes as 4 corners).
+    segments = any(b.polygon is not None for b in ds.boxes)
     for img in ds.images:
         _copy_image(img, out / "images" / img.split)
-        lines = [
-            f"{index[b.label]} {b.x + b.w / 2:.6f} {b.y + b.h / 2:.6f} {b.w:.6f} {b.h:.6f}"
-            for b in img.boxes
-        ]
+        if segments:
+            lines = [
+                f"{index[b.label]} " + " ".join(f"{v:.6f}" for p in b.corners() for v in p)
+                for b in img.boxes
+            ]
+        else:
+            lines = [
+                f"{index[b.label]} {b.x + b.w / 2:.6f} {b.y + b.h / 2:.6f} {b.w:.6f} {b.h:.6f}"
+                for b in img.boxes
+            ]
         (out / "labels" / img.split / f"{img.id}.txt").write_text(
             "".join(line + "\n" for line in lines), encoding="utf-8"
         )
@@ -268,6 +284,7 @@ def dataset_dict(ds: Dataset, base: Path) -> dict:
                         "y": round(b.y, 6),
                         "w": round(b.w, 6),
                         "h": round(b.h, 6),
+                        **({"polygon": [[round(px, 6), round(py, 6)] for px, py in b.polygon]} if b.polygon is not None else {}),
                     }
                     for b in img.boxes
                 ],

@@ -11,7 +11,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Dict, Iterator, List, Optional
+from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
 SPLITS = ("train", "val", "test")
 
@@ -25,6 +25,22 @@ def _key(text: str) -> str:
     return text.strip().lower()
 
 
+def box_from_polygon(label: str, cls: str, points, attributes=None) -> "Box":
+    """A polygon Box; x, y, w, h is the box around the points."""
+    pts = [(float(px), float(py)) for px, py in points]
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return Box(
+        label=label,
+        cls=cls,
+        x=min(xs),
+        y=min(ys),
+        w=max(xs) - min(xs),
+        h=max(ys) - min(ys),
+        attributes=dict(attributes or {}),
+        polygon=pts,
+    )
+
+
 @dataclass
 class Box:
     """One labelled box.
@@ -34,6 +50,8 @@ class Box:
     attributes  sub-category values, e.g. {"Condition": "Ripe"}; a missing
                 key means "no value"
     x, y, w, h  normalised 0..1, top-left origin
+    polygon     corners [(x, y), ...] normalised, or None for a plain box;
+                x, y, w, h is then the box around the polygon
     """
 
     label: str
@@ -43,6 +61,21 @@ class Box:
     w: float
     h: float
     attributes: Dict[str, str] = field(default_factory=dict)
+    polygon: Optional[List[Tuple[float, float]]] = None
+
+    @property
+    def is_polygon(self) -> bool:
+        return self.polygon is not None
+
+    def polygon_pixels(self, width: int, height: int) -> List[Tuple[float, float]]:
+        """Polygon corners in pixels (a box gives its 4 corners)."""
+        return [(px * width, py * height) for px, py in self.corners()]
+
+    def corners(self) -> List[Tuple[float, float]]:
+        """The polygon, or the 4 corners of the box (clockwise from top-left)."""
+        if self.polygon is not None:
+            return list(self.polygon)
+        return [(self.x, self.y), (self.x + self.w, self.y), (self.x + self.w, self.y + self.h), (self.x, self.y + self.h)]
 
     def get(self, name: str) -> Optional[str]:
         """The value of sub-category `name` (any letter case), or None."""
