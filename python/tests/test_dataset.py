@@ -67,7 +67,16 @@ class WriteTest(TempDirCase):
                 with self.subTest(f"{name} -> {fmt}"):
                     back = nhan.load(getattr(ds, f"to_{fmt}")(self.tmp / f"{name}-{fmt}"))
                     # YOLO joins separate fields into the name; nothing is lost.
-                    self.assertEqual(snapshot(back, with_label=False), snapshot(ds, with_label=False))
+                    if fmt != "voc":
+                        self.assertEqual(snapshot(back, with_label=False), snapshot(ds, with_label=False))
+                        continue
+                    # VOC stores whole pixels: within 1 pixel on small photos.
+                    for a, b in zip(sorted(back, key=lambda i: i.id), sorted(ds, key=lambda i: i.id)):
+                        tol = 1.0 / min(a.width, a.height) + 1e-9
+                        for ba, bb in zip(a.boxes, b.boxes):
+                            self.assertEqual((ba.cls, ba.attributes), (bb.cls, bb.attributes))
+                            for va, vb in ((ba.x, bb.x), (ba.y, bb.y), (ba.w, bb.w), (ba.h, bb.h)):
+                                self.assertAlmostEqual(va, vb, delta=tol)
 
     def test_fields_to_yolo_gives_the_app_names(self):
         back = nhan.load(nhan.load(FIXTURES / "coco_fields").to_yolo(self.tmp / "y"))
@@ -110,6 +119,23 @@ class WriteTest(TempDirCase):
         self.assertEqual(b.polygon_pixels(64, 48)[0], (32.0, 12.0))
         plain = [x for x in nhan.load(FIXTURES / "coco_joined").boxes if not x.is_polygon][0]
         self.assertEqual(len(plain.corners()), 4)
+
+    def test_sdk_writes_the_same_voc_corners_as_the_app(self):
+        """Rounding: halves go up, like the app's C++ core."""
+        app = FIXTURES / "voc_resized" / "Annotations"
+        # From COCO (pixel decimals, e.g. 7.5 and 22.5) to VOC (whole pixels),
+        # compared with what the app wrote for the same data.
+        out = nhan.load(FIXTURES / "coco_resized").to_voc(self.tmp / "v") / "Annotations"
+        for xml in sorted(app.glob("*.xml")):
+            with self.subTest(xml.name):
+                pick = lambda text: [l.strip() for l in text.splitlines() if l.strip().startswith(("<xmin>", "<ymin>", "<xmax>", "<ymax>"))]
+                self.assertEqual(pick((out / xml.name).read_text()), pick(xml.read_text()))
+
+    def test_half_rounds_up_like_the_app(self):
+        from nhan.writers import _round
+
+        self.assertEqual([_round(v) for v in (6.5, 7.5, 0.5, 2.5)], [7, 8, 1, 3])
+        self.assertEqual(_round(0.125, 2), 0.13)
 
     def test_refuses_a_folder_that_is_not_empty(self):
         (self.tmp / "busy").mkdir()

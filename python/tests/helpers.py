@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures"
-NAMES = ["coco_single", "coco_joined", "coco_fields", "yolo_joined", "voc_fields", "voc_joined"]
+NAMES = ["coco_single", "coco_joined", "coco_fields", "yolo_joined", "voc_fields", "voc_joined", "coco_resized", "voc_resized"]
 
 
 def has(module: str) -> bool:

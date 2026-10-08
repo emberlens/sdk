@@ -8,6 +8,7 @@ again with nhan.load().
 from __future__ import annotations
 
 import json
+import math
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,6 +17,19 @@ from typing import Dict, List
 from .card import CARD_FILE
 from .errors import NhanError
 from .model import SPLITS, Dataset, Image
+
+
+def _round(value: float, digits: int = 0) -> float:
+    """Half away from zero, like the app's C++ core (std::round / lround).
+
+    Python's round() rounds halves to even (round(7.5) == 8 but
+    round(6.5) == 6), which would put some corners 1 pixel away from what
+    the app writes.
+    """
+    scale = 10 ** digits
+    v = abs(value) * scale
+    out = math.floor(v + 0.5) / scale
+    return -out if value < 0 else out
 
 
 def _prepare(out_dir) -> Path:
@@ -118,10 +132,10 @@ def _write_coco(ds: Dataset, out: Path, labels: List[str]) -> None:
                 area = w * h
                 if b.polygon is not None:
                     pts = b.polygon_pixels(img.width, img.height)
-                    ann["segmentation"] = [[round(v, 2) for p in pts for v in p]]
+                    ann["segmentation"] = [[_round(v, 2) for p in pts for v in p]]
                     area = abs(sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1] for i in range(len(pts)))) / 2
-                ann["bbox"] = [round(b.x * img.width, 2), round(b.y * img.height, 2), round(w, 2), round(h, 2)]
-                ann["area"] = round(area, 2)
+                ann["bbox"] = [_round(b.x * img.width, 2), _round(b.y * img.height, 2), _round(w, 2), _round(h, 2)]
+                ann["area"] = _round(area, 2)
                 ann["iscrowd"] = 0
                 if b.attributes and _fields_style(b):
                     ann["attributes"] = dict(b.attributes)
@@ -196,10 +210,10 @@ def _write_voc(ds: Dataset, out: Path) -> None:
                 "    <truncated>0</truncated>",
                 "    <difficult>0</difficult>",
                 "    <bndbox>",
-                f"      <xmin>{round(x0) + 1}</xmin>",
-                f"      <ymin>{round(y0) + 1}</ymin>",
-                f"      <xmax>{round(x1)}</xmax>",
-                f"      <ymax>{round(y1)}</ymax>",
+                f"      <xmin>{int(_round(x0)) + 1}</xmin>",
+                f"      <ymin>{int(_round(y0)) + 1}</ymin>",
+                f"      <xmax>{int(_round(x1))}</xmax>",
+                f"      <ymax>{int(_round(y1))}</ymax>",
                 "    </bndbox>",
             ]
             if b.attributes and _fields_style(b):

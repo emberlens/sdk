@@ -55,7 +55,7 @@ ImageSets/Main/{train,val,test}.txt     one photo id per line
 ```
 
 - XML: `<annotation><filename/><size><width/><height/><depth/></size><object><name/><bndbox><xmin/><ymin/><xmax/><ymax/></bndbox>[<attributes>]</object>…</annotation>`.
-- Box corners are integer pixels, **1-based and inclusive**: `xmin = round(x·W) + 1`, `xmax = round((x + w)·W)`.
+- Box corners are integer pixels, **1-based and inclusive**: `xmin = round(x·W) + 1`, `xmax = round((x + w)·W)`. `round` rounds a half away from zero (7.5 → 8, 22.5 → 23), like C++ `std::lround`; not to even.
 - VOC XML has no polygon field. A polygon is written as the box around it (`<bndbox>`). Use COCO or YOLO to keep outlines.
 - Separate-fields values (CVAT style): `<attributes><attribute><name>Condition</name><value>Ripe</value></attribute>…</attributes>`.
 
@@ -143,11 +143,22 @@ VOC files are plain UTF-8 XML with the 5 standard entities and numeric character
 
 Only a small YAML subset is used: `key: value` lines, a flow list (`[a, 'b c']`), possibly over several lines, or a block list (`- a`), or an index map (`0: a`). `#` starts a comment. A YAML library is not needed.
 
+### 4.2 Resized exports
+
+The export preset can shrink photos (`images.longest_side` in the card). The app stores labels as shares of the photo (0..1), and every pixel value in the files is computed from the **exported** photo size, so labels shrink with the photo:
+
+- COCO `bbox`, `segmentation`, `area`, and VOC corners use the exported width and height, which are also written in the files (`images[].width/height`, `<size>`).
+- YOLO and the common model are normalised, so they are the same at every size.
+- A photo smaller than `longest_side` is never enlarged.
+
+The fixtures `coco_resized` and `voc_resized` (longest side 40 px) must give the same normalised boxes and polygons as `coco_joined` and `voc_joined` (VOC: within 1 pixel, because it stores whole pixels).
+
 ## 6. Writing
 
 Writers produce the layouts of §2 and a new card (with `"written_by"`). Rules:
 
 - Do not write into a folder that is not empty.
+- Round pixel values half away from zero (§2.3), so a port writes the same numbers as the app.
 - **YOLO:** if a box has values but its label is its class (the separate-fields style), write the joined name (`class` + values, card `separator`, default `_`). No value is lost.
 - **COCO / VOC:** write per-box attributes only when the label equals the class (the separate-fields style).
 - **Polygons:** COCO writes `segmentation` and the polygon `area`. YOLO switches every line to segmentation lines when any box has a polygon. VOC writes the box.
@@ -165,6 +176,8 @@ Writers produce the layouts of §2 and a new card (with `"written_by"`). Rules:
 | `yolo_joined` | YOLO | joined, `.`, lowercase | |
 | `voc_fields` | VOC | separate fields | `<attributes>` |
 | `voc_joined` | VOC | joined, `_` | |
+| `coco_resized` | COCO | joined, `_` | photos shrunk to longest side 40 px |
+| `voc_resized` | VOC | joined, `_` | photos shrunk to longest side 40 px |
 
 Data: 4 photos (80×60, 64×48, 60×80, 40×40), split 2/1/1. One photo has no boxes. Values: `Type` only fits Mango, and some boxes have no value. The unripe mango on `photo-2` is a **polygon** (a diamond inside its box), so `shapes` is `mixed`. COCO and YOLO keep the polygon; VOC gives its box.
 

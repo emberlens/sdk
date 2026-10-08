@@ -44,6 +44,47 @@ class GoldenTest(unittest.TestCase):
         self.assertEqual([i.id for i in ds if not i.boxes], ["photo-4"])
 
 
+class ResizedExportTest(unittest.TestCase):
+    """The app shrank the photos (longest side 40 px): every label shrinks
+    with its photo, so the SDK reads the same positions as at full size."""
+
+    def test_coco_labels_keep_their_place_when_photos_shrink(self):
+        full = nhan.load(FIXTURES / "coco_joined")
+        small = nhan.load(FIXTURES / "coco_resized")
+        self.assertEqual(snapshot(small), snapshot(full))
+        polys = lambda d: [[(round(x, 4), round(y, 4)) for x, y in b.polygon] for b in d.boxes if b.polygon]
+        self.assertEqual(polys(small), polys(full))
+
+    def test_photos_really_are_smaller_and_sizes_match_the_files(self):
+        from nhan.imagesize import image_size
+
+        full = {i.id: i for i in nhan.load(FIXTURES / "coco_joined")}
+        for img in nhan.load(FIXTURES / "coco_resized"):
+            big = full[img.id]
+            scale = min(1.0, 40 / max(big.width, big.height))
+            with self.subTest(img.id):
+                self.assertEqual((img.width, img.height), (round(big.width * scale), round(big.height * scale)))
+                self.assertEqual(image_size(img.path), (img.width, img.height))
+
+    def test_pixel_boxes_shrink_by_the_photo_scale(self):
+        full = {i.id: i for i in nhan.load(FIXTURES / "coco_joined")}
+        for img in nhan.load(FIXTURES / "coco_resized"):
+            big = full[img.id]
+            for a, b in zip(img.boxes, big.boxes):
+                small_px = a.pixels(img.width, img.height)
+                big_px = b.pixels(big.width, big.height)
+                for s, l in zip(small_px, big_px):
+                    self.assertAlmostEqual(s, l * img.width / big.width, delta=0.01)
+
+    def test_voc_is_within_one_pixel(self):
+        full = nhan.load(FIXTURES / "voc_joined")
+        small = nhan.load(FIXTURES / "voc_resized")
+        for a, b in zip(sorted(small, key=lambda i: i.id), sorted(full, key=lambda i: i.id)):
+            for ba, bb in zip(a.boxes, b.boxes):
+                for va, vb in ((ba.x, bb.x), (ba.y, bb.y), (ba.w, bb.w), (ba.h, bb.h)):
+                    self.assertAlmostEqual(va, vb, delta=1.0 / min(a.width, a.height) + 1e-9)
+
+
 class ZipTest(TempDirCase):
     def make_zip(self, name, top_folder=""):
         z = self.tmp / f"{name}.zip"

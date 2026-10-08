@@ -1,0 +1,43 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "file_name": "photo-3.jpg",
+      "width": 30,
+      "height": 40
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 3,
+      "bbox": [
+        0.0,
+        0.0,
+        30.0,
+        40.0
+      ],
+      "area": 1200.0,
+      "iscrowd": 0
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Mango_Ripe_Alphonso"
+    },
+    {
+      "id": 2,
+      "name": "Mango_Unripe"
+    },
+    {
+      "id": 3,
+      "name": "Strawberry"
+    },
+    {
+      "id": 4,
+      "name": "Strawberry_Ripe"
+    }
+  ]
+}
