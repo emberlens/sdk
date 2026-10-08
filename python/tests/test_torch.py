@@ -15,6 +15,19 @@ class CropsTest(TempDirCase):
         files = sorted(p.relative_to(out).as_posix() for p in out.rglob("*.jpg"))
         self.assertEqual(files, ["train/Ripe/photo-1_1.jpg", "train/Ripe/photo-1_2.jpg", "train/Unripe/photo-2_1.jpg"])
 
+    def test_open_turns_an_exif_rotated_photo_upright(self):
+        import shutil
+
+        from nhan.model import Image
+
+        src = FIXTURES.parent.parent / "packages" / "nhan_data" / "test" / "fixtures" / "exif6_30x60.jpg"
+        dest = self.tmp / "rotated.jpg"
+        shutil.copy(src, dest)
+        photo = Image(id="r", path=dest, width=30, height=60, split="train").open()
+        self.assertEqual(photo.size, (30, 60))
+        r, g, b = photo.convert("RGB").getpixel((7, 15))
+        self.assertTrue(r > 200 and g < 60 and b < 60, (r, g, b))
+
     def test_open_gives_a_pillow_image(self):
         self.assertEqual(nhan.load(FIXTURES / "coco_joined")[0].open().size[0] > 0, True)
 

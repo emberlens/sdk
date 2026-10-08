@@ -143,7 +143,11 @@ VOC files are plain UTF-8 XML with the 5 standard entities and numeric character
 
 Only a small YAML subset is used: `key: value` lines, a flow list (`[a, 'b c']`), possibly over several lines, or a block list (`- a`), or an index map (`0: a`). `#` starts a comment. A YAML library is not needed.
 
-### 4.2 Resized exports
+### 4.2 Photo orientation
+
+Nhan exports store every photo **upright** (any EXIF Orientation is applied, and the file has no orientation tag), and labels refer to that upright photo. Readers of other datasets should apply EXIF Orientation before using pixels, as the Python SDK's `Image.open()` does.
+
+### 4.3 Resized exports
 
 The export preset can shrink photos (`images.longest_side` in the card). The app stores labels as shares of the photo (0..1), and every pixel value in the files is computed from the **exported** photo size, so labels shrink with the photo:
 

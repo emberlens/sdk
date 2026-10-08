@@ -125,13 +125,17 @@ class Image:
     boxes: List[Box] = field(default_factory=list)
 
     def open(self):
-        """The photo as a Pillow image (needs Pillow)."""
+        """The photo as a Pillow image, upright (needs Pillow)."""
         from .extras import require_pillow
 
         PIL_Image = require_pillow()
+        from PIL import ImageOps
+
         img = PIL_Image.open(self.path)
         img.load()
-        return img
+        # Nhan exports are stored upright. Photos from other tools may carry
+        # an EXIF Orientation tag; turn them upright like a viewer would.
+        return ImageOps.exif_transpose(img)
 
 
 @dataclass
