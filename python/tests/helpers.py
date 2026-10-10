@@ -17,7 +17,7 @@ def has(module: str) -> bool:
 
 class TempDirCase(unittest.TestCase):
     def setUp(self):
-        self.tmp = Path(tempfile.mkdtemp(prefix="nhan-test-"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="emberlens-test-"))
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
 
     def copy_fixture(self, name: str) -> Path:

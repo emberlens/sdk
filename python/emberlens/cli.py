@@ -1,4 +1,4 @@
-"""The `nhan` command. Run `./nhan help` for the list."""
+"""The `emberlens` command. Run `./emberlens help` for the list."""
 
 from __future__ import annotations
 
@@ -10,19 +10,19 @@ from pathlib import Path
 from typing import List, Optional
 
 from . import __version__
-from .errors import MissingExtra, NhanError
+from .errors import MissingExtra, EmberlensError
 from .load import load
 
 EXAMPLES = """
 examples:
-  ./nhan info   fruit-stand-coco.zip
-  ./nhan preview fruit-stand-coco.zip
-  ./nhan convert fruit-stand-coco.zip --to yolo
-  ./nhan convert fruit-stand-coco.zip --to yolo --where class=Mango --labels condition
-  ./nhan crops  fruit-stand-coco.zip
-  ./nhan train classify fruit-stand-coco.zip --labels condition
-  ./nhan train detect   fruit-stand-coco.zip
-  ./nhan predict fruit-stand-coco-classify-model photo.jpg
+  ./emberlens info   fruit-stand-coco.zip
+  ./emberlens preview fruit-stand-coco.zip
+  ./emberlens convert fruit-stand-coco.zip --to yolo
+  ./emberlens convert fruit-stand-coco.zip --to yolo --where class=Mango --labels condition
+  ./emberlens crops  fruit-stand-coco.zip
+  ./emberlens train classify fruit-stand-coco.zip --labels condition
+  ./emberlens train detect   fruit-stand-coco.zip
+  ./emberlens predict fruit-stand-coco-classify-model photo.jpg
 """
 
 
@@ -49,7 +49,7 @@ def _parse_split(text: str):
     except ValueError:
         parts = []
     if len(parts) != 3 or sum(parts) <= 0 or min(parts) < 0:
-        raise NhanError('Write the split as three numbers, like --split 80/10/10.')
+        raise EmberlensError('Write the split as three numbers, like --split 80/10/10.')
     return parts
 
 
@@ -57,7 +57,7 @@ def _dataset(args):
     ds = load(args.export)
     for cond in args.where or []:
         if "=" not in cond:
-            raise NhanError(f'Write --where as name=value, like --where class=Mango (got "{cond}").')
+            raise EmberlensError(f'Write --where as name=value, like --where class=Mango (got "{cond}").')
         key, value = (s.strip() for s in cond.split("=", 1))
         val = None if value.lower() in ("none", "null", "") else value
         if key.lower() == "split":
@@ -67,7 +67,7 @@ def _dataset(args):
         else:
             ds = ds.filter(**{key: val})
         if len(ds) == 0:
-            raise NhanError(f"No boxes match {cond}.")
+            raise EmberlensError(f"No boxes match {cond}.")
     if getattr(args, "split", None):
         ds = ds.resplit(*_parse_split(args.split))
     if getattr(args, "labels", None) and args.labels != "label":
@@ -124,7 +124,7 @@ def cmd_train(args):
         train_classifier(ds, out, epochs=args.epochs or 5, **common)
     else:
         train_detector(ds, out, epochs=args.epochs or 10, **common)
-    print(f"Next: ./nhan predict {out} <photo.jpg>")
+    print(f"Next: ./emberlens predict {out} <photo.jpg>")
 
 
 def cmd_predict(args):
@@ -163,12 +163,12 @@ def cmd_predict(args):
 
 
 def cmd_run(args):
-    """Run your own Python script, with `import nhan` working."""
+    """Run your own Python script, with `import emberlens` working."""
     import runpy
 
     script = Path(args.script)
     if not script.is_file():
-        raise NhanError(f"Can't find {script}.")
+        raise EmberlensError(f"Can't find {script}.")
     sys.argv = [str(script), *args.args]
     sys.path.insert(0, str(script.resolve().parent))
     runpy.run_path(str(script), run_name="__main__")
@@ -182,8 +182,8 @@ def cmd_selftest(args):
     suite = unittest.defaultTestLoader.discover(str(tests), top_level_dir=str(tests.parent))
     result = unittest.TextTestRunner(verbosity=1).run(suite)
     if not result.wasSuccessful():
-        raise NhanError("Some checks failed. See above.")
-    print("The Nhan SDK works on this computer.")
+        raise EmberlensError("Some checks failed. See above.")
+    print("The Emberlens SDK works on this computer.")
 
 
 def cmd_install(args):
@@ -197,12 +197,12 @@ def cmd_install(args):
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="nhan",
-        description="Use your Nhan exports for training. EXPORT is the .zip from the app (or its folder).",
+        prog="emberlens",
+        description="Use your Emberlens exports for training. EXPORT is the .zip from the app (or its folder).",
         epilog=EXAMPLES,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("--version", action="version", version=f"nhan-sdk {__version__}")
+    p.add_argument("--version", action="version", version=f"emberlens-sdk {__version__}")
     sub = p.add_subparsers(dest="command", metavar="COMMAND")
 
     def with_export(sp, labels=True, split=True):
@@ -243,7 +243,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_train)
 
     s = sub.add_parser("predict", help="run a trained model on photos")
-    s.add_argument("model", help="the model folder from ./nhan train")
+    s.add_argument("model", help="the model folder from ./emberlens train")
     s.add_argument("images", nargs="+", help="one or more photos")
     s.add_argument("--threshold", type=float, default=0.5, help="detector: lowest score to keep (0..1)")
     s.add_argument("--out", help="the .json file to write")
@@ -254,7 +254,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("extra", choices=["images", "train"])
     s.set_defaults(func=cmd_install)
 
-    s = sub.add_parser("run", help="run your own Python script that uses `import nhan`")
+    s = sub.add_parser("run", help="run your own Python script that uses `import emberlens`")
     s.add_argument("script", help="your .py file")
     s.add_argument("args", nargs=argparse.REMAINDER, help="arguments for your script")
     s.set_defaults(func=cmd_run)
@@ -283,14 +283,14 @@ def main(argv: Optional[List[str]] = None) -> int:
 
                 try:
                     install(e.extra)
-                except NhanError as err:
+                except EmberlensError as err:
                     print(f"Error: {err}", file=sys.stderr)
                     return 1
                 print("Run your command again.")
                 return 0
         print(f"Error: {e}", file=sys.stderr)
         return 1
-    except NhanError as e:
+    except EmberlensError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:

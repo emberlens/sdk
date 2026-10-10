@@ -1,4 +1,4 @@
-"""nhan.load(): open an export zip or folder."""
+"""emberlens.load(): open an export zip or folder."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import Optional, Union
 
 from .card import label_parts, read_card
-from .errors import NhanError
+from .errors import EmberlensError
 from .model import Dataset
 from .readers import coco, voc, yolo
 
 READERS = {"coco": coco.read, "yolo": yolo.read, "voc": voc.read}
-_MARKER = ".nhan_extracted"
+_MARKER = ".emberlens_extracted"
 
 
 def _extract(zip_path: Path) -> Path:
@@ -38,17 +38,17 @@ def _extract(zip_path: Path) -> Path:
             for member in z.infolist():
                 dest = (target / member.filename).resolve()
                 if root != dest and root not in dest.parents:
-                    raise NhanError(f"The zip has an unsafe path: {member.filename}")
+                    raise EmberlensError(f"The zip has an unsafe path: {member.filename}")
             z.extractall(target)
     except zipfile.BadZipFile:
-        raise NhanError(f"{zip_path.name} is not a valid zip file.") from None
+        raise EmberlensError(f"{zip_path.name} is not a valid zip file.") from None
     (target / _MARKER).write_text(stamp)
     return target
 
 
 def _find_root(folder: Path) -> Path:
     """The folder that holds the export (the zip may add one level)."""
-    signs = ("nhan.json", "data.yaml", "annotations", "Annotations")
+    signs = ("emberlens.json", "data.yaml", "annotations", "Annotations")
     if any((folder / s).exists() for s in signs):
         return folder
     children = [p for p in folder.iterdir() if p.is_dir() and not p.name.startswith((".", "__"))]
@@ -74,33 +74,33 @@ def detect_format(root: Path, card: Optional[dict]) -> str:
         return "voc"
     if (root / "data.yaml").is_file() or _has(root, "labels", "**/*.txt"):
         return "yolo"
-    if _has(root, "annotations", "*.json") or [p for p in root.glob("*.json") if p.name != "nhan.json"]:
+    if _has(root, "annotations", "*.json") or [p for p in root.glob("*.json") if p.name != "emberlens.json"]:
         return "coco"
-    raise NhanError(
-        f"Can't tell the format of {root}. Expected a Nhan export "
+    raise EmberlensError(
+        f"Can't tell the format of {root}. Expected a Emberlens export "
         "(COCO, YOLO or Pascal VOC)."
     )
 
 
 def load(path: Union[str, Path], format: Optional[str] = None) -> Dataset:
-    """Open a Nhan export: the .zip from the app, or its unzipped folder.
+    """Open a Emberlens export: the .zip from the app, or its unzipped folder.
 
-        ds = nhan.load("fruit-stand-coco-2026-10-08.zip")
+        ds = emberlens.load("fruit-stand-coco-2026-10-08.zip")
 
     Also opens plain COCO, YOLO and Pascal VOC datasets from other tools.
     """
     p = Path(path).expanduser()
     if not p.exists():
-        raise NhanError(f"Can't find {p}. Check the path.")
+        raise EmberlensError(f"Can't find {p}. Check the path.")
     if p.is_file():
         if p.suffix.lower() != ".zip":
-            raise NhanError(f"{p.name} is not a .zip or a folder.")
+            raise EmberlensError(f"{p.name} is not a .zip or a folder.")
         p = _extract(p)
     root = _find_root(p.resolve())
     card = read_card(root)
     fmt = (format or detect_format(root, card)).lower()
     if fmt not in READERS:
-        raise NhanError(f'Unknown format "{fmt}". Use coco, yolo or voc.')
+        raise EmberlensError(f'Unknown format "{fmt}". Use coco, yolo or voc.')
     images, label_order = READERS[fmt](root)
 
     # Fill class and values from the card (joined names) and keep values
@@ -139,7 +139,7 @@ def load(path: Union[str, Path], format: Optional[str] = None) -> Dataset:
 
     missing = [img for img in images if not img.path.is_file()]
     if missing and len(missing) == len(images):
-        raise NhanError(f"The annotation files point to images that are not in {root}.")
+        raise EmberlensError(f"The annotation files point to images that are not in {root}.")
 
     return Dataset(
         name=name,

@@ -1,15 +1,15 @@
 # Optional: install the SDK into your own Python with
 #   pip install -e "sdk/python"            (core: no extra libraries)
 #   pip install -e "sdk/python[train]"     (with Pillow, PyTorch, torchvision)
-# Most users do not need this: the ./nhan launcher sets everything up.
+# Most users do not need this: the ./emberlens launcher sets everything up.
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nhan-sdk"
+name = "emberlens-sdk"
 version = "0.1.0"
-description = "Open Nhan exports (COCO, YOLO, Pascal VOC) and use them for training."
+description = "Open Emberlens exports (COCO, YOLO, Pascal VOC) and use them for training."
 requires-python = ">=3.9"
 license = { text = "BSD-3-Clause" }
 dependencies = []
@@ -19,7 +19,7 @@ images = ["pillow"]
 train = ["pillow", "torch", "torchvision"]
 
 [project.scripts]
-nhan = "nhan.cli:main"
+emberlens = "emberlens.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["nhan*"]
+include = ["emberlens*"]

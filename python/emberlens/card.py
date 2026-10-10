@@ -1,4 +1,4 @@
-"""The nhan.json dataset card (sdk/schema/nhan-card.schema.json).
+"""The emberlens.json dataset card (sdk/schema/emberlens-card.schema.json).
 
 It maps every label name in the export to its parts, so a joined name like
 "mango_alphonso_ripe" is split without guessing.
@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
-CARD_FILE = "nhan.json"
+CARD_FILE = "emberlens.json"
 CARD_VERSION = 1
 
 
@@ -24,13 +24,13 @@ def read_card(root: Path) -> Optional[dict]:
         return None
     if not isinstance(card, dict):
         return None
-    version = card.get("nhan_card_version")
+    version = card.get("emberlens_card_version")
     if isinstance(version, int) and version > CARD_VERSION:
-        from .errors import NhanError
+        from .errors import EmberlensError
 
-        raise NhanError(
-            "This export was made by a newer Nhan app. Get the newest SDK "
-            "from the Nhan repository and try again."
+        raise EmberlensError(
+            "This export was made by a newer Emberlens app. Get the newest SDK "
+            "from the Emberlens repository and try again."
         )
     return card
 

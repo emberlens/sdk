@@ -1,4 +1,4 @@
-"""PyTorch datasets built from a nhan.Dataset.
+"""PyTorch datasets built from a emberlens.Dataset.
 
     det = ds.torch_detection("train")      # for torchvision detection models
     image, target = det[0]                 # target: boxes (x0,y0,x1,y1 px), labels (1..N)
@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from .crops import crop_box
-from .errors import NhanError
+from .errors import EmberlensError
 from .extras import require_torch
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -91,7 +91,7 @@ class CropDataset:
 
 def need_two_labels(classes):
     if len(classes) < 2:
-        raise NhanError(
+        raise EmberlensError(
             "Training needs at least 2 different labels. Found: "
             + (", ".join(classes) or "none")
             + ". Try another --target."

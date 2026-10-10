@@ -1,9 +1,9 @@
 import unittest
 import xml.etree.ElementTree as ET
 
-from nhan.imagesize import image_size
-from nhan.minixml import parse_string
-from nhan.readers.yolo import parse_data_yaml
+from emberlens.imagesize import image_size
+from emberlens.minixml import parse_string
+from emberlens.readers.yolo import parse_data_yaml
 
 from .helpers import FIXTURES
 
@@ -28,7 +28,7 @@ class ImageSizeTest(unittest.TestCase):
     def test_jpeg_and_png(self):
         self.assertEqual(image_size(FIXTURES / "coco_joined" / "images" / "test" / "photo-3.jpg"), (60, 80))
         self.assertEqual(image_size(FIXTURES / "source" / "img1.png"), (80, 60))
-        self.assertIsNone(image_size(FIXTURES / "coco_joined" / "nhan.json"))
+        self.assertIsNone(image_size(FIXTURES / "coco_joined" / "emberlens.json"))
 
 
 class MiniXmlTest(unittest.TestCase):

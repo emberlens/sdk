@@ -1,8 +1,8 @@
 """Write a Dataset as COCO, YOLO, Pascal VOC, or one dataset.json file.
 
-The folder layouts are the same as the Nhan app's exports (sdk/SPEC.md), and
-a fresh nhan.json card is written next to them, so the result can be loaded
-again with nhan.load().
+The folder layouts are the same as the Emberlens app's exports (sdk/SPEC.md), and
+a fresh emberlens.json card is written next to them, so the result can be loaded
+again with emberlens.load().
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from .card import CARD_FILE
-from .errors import NhanError
+from .errors import EmberlensError
 from .model import SPLITS, Dataset, Image
 
 
@@ -35,7 +35,7 @@ def _round(value: float, digits: int = 0) -> float:
 def _prepare(out_dir) -> Path:
     out = Path(out_dir).expanduser()
     if out.exists() and any(out.iterdir()):
-        raise NhanError(f"{out} is not empty. Choose a new folder.")
+        raise EmberlensError(f"{out} is not empty. Choose a new folder.")
     out.mkdir(parents=True, exist_ok=True)
     return out
 
@@ -85,10 +85,10 @@ def _shapes(ds: Dataset) -> str:
 
 
 def card_for(ds: Dataset, fmt: str) -> dict:
-    """A nhan.json card that describes `ds` as written in `fmt`."""
+    """A emberlens.json card that describes `ds` as written in `fmt`."""
     old = ds.card or {}
     return {
-        "nhan_card_version": 1,
+        "emberlens_card_version": 1,
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "project": old.get("project") or {"name": ds.name, "category": ""},
         "format": fmt,
@@ -103,7 +103,7 @@ def card_for(ds: Dataset, fmt: str) -> dict:
         "split": old.get("split") or {},
         "seed": old.get("seed", 0),
         "images": old.get("images") or {},
-        "written_by": "nhan-sdk",
+        "written_by": "emberlens-sdk",
     }
 
 
@@ -241,10 +241,10 @@ def write(ds: Dataset, out_dir, fmt: str) -> Path:
     if fmt == "json":
         return write_json(ds, Path(out_dir) / "dataset.json")
     if fmt not in ("coco", "yolo", "voc"):
-        raise NhanError(f'Unknown format "{fmt}". Use coco, yolo, voc or json.')
+        raise EmberlensError(f'Unknown format "{fmt}". Use coco, yolo, voc or json.')
     missing = [img.path for img in ds.images if not img.path.is_file()]
     if missing:
-        raise NhanError(f"Image file missing: {missing[0]}")
+        raise EmberlensError(f"Image file missing: {missing[0]}")
     if fmt == "yolo" and any(b.attributes and _fields_style(b) for b in ds.boxes):
         # YOLO has only one name per box: join the values into it, like the
         # app does (D-019), so no value is lost.
@@ -264,7 +264,7 @@ def write(ds: Dataset, out_dir, fmt: str) -> Path:
 
 
 def dataset_dict(ds: Dataset, base: Path) -> dict:
-    """The dataset as plain data (sdk/schema/nhan-dataset.schema.json).
+    """The dataset as plain data (sdk/schema/emberlens-dataset.schema.json).
 
     Image paths are relative to `base` when possible.
     """
@@ -276,7 +276,7 @@ def dataset_dict(ds: Dataset, base: Path) -> dict:
             return Path(p).resolve().as_posix()
 
     return {
-        "nhan_dataset_version": 1,
+        "emberlens_dataset_version": 1,
         "name": ds.name,
         "source_format": ds.format,
         "classes": ds.classes,

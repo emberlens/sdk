@@ -3,7 +3,7 @@ import io
 import os
 import unittest
 
-from nhan.cli import main
+from emberlens.cli import main
 
 from .helpers import FIXTURES, TempDirCase
 
@@ -53,7 +53,7 @@ class CliTest(TempDirCase):
     def test_run_a_script(self):
         script = self.tmp / "mine.py"
         script.write_text(
-            "import sys, nhan\nds = nhan.load(sys.argv[1])\nopen('out.txt', 'w').write(str(len(ds)))\n"
+            "import sys, emberlens\nds = emberlens.load(sys.argv[1])\nopen('out.txt', 'w').write(str(len(ds)))\n"
         )
         code, _, _ = self.run_cli("run", str(script), str(FIXTURES / "coco_joined"))
         self.assertEqual(code, 0)

@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from .errors import NhanError
+from .errors import EmberlensError
 from .extras import require_pillow
 
 
@@ -34,7 +34,7 @@ def write_crops(ds, out_dir, padding: float = 0.0, size: Optional[int] = None) -
     require_pillow()
     out = Path(out_dir).expanduser()
     if out.exists() and any(out.iterdir()):
-        raise NhanError(f"{out} is not empty. Choose a new folder.")
+        raise EmberlensError(f"{out} is not empty. Choose a new folder.")
     count = 0
     for img in ds.images:
         if not img.boxes:

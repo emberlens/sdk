@@ -1,11 +1,11 @@
 """Errors with messages that a non-programmer can act on."""
 
 
-class NhanError(Exception):
+class EmberlensError(Exception):
     """Something the user can fix. The message says how."""
 
 
-class MissingExtra(NhanError):
+class MissingExtra(EmberlensError):
     """An optional library (Pillow, PyTorch) is not installed."""
 
     def __init__(self, extra: str, packages: str):
@@ -13,6 +13,6 @@ class MissingExtra(NhanError):
         self.packages = packages
         super().__init__(
             f"This needs {packages}. Install it with:\n"
-            f"    ./nhan install {extra}\n"
+            f"    ./emberlens install {extra}\n"
             f"(or: pip install {packages})"
         )

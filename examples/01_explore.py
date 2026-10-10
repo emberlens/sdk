@@ -1,13 +1,13 @@
 # Look inside an export and pick the photos you want.
-# Run:  ./nhan run examples/01_explore.py path/to/your-export.zip
+# Run:  ./emberlens run examples/01_explore.py path/to/your-export.zip
 import sys
 from pathlib import Path
 
-import nhan
+import emberlens
 
 # No path given: use the sample export that ships with the SDK.
 sample = Path(__file__).resolve().parent.parent / "fixtures" / "coco_joined"
-ds = nhan.load(sys.argv[1] if len(sys.argv) > 1 else sample)
+ds = emberlens.load(sys.argv[1] if len(sys.argv) > 1 else sample)
 print(ds.summary())
 
 # Every photo and box

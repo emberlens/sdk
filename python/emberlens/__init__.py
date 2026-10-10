@@ -1,7 +1,7 @@
-"""Nhan SDK: open a Nhan export (COCO, YOLO or Pascal VOC) and use it for training.
+"""Emberlens SDK: open a Emberlens export (COCO, YOLO or Pascal VOC) and use it for training.
 
-    import nhan
-    ds = nhan.load("fruit-stand-coco.zip")
+    import emberlens
+    ds = emberlens.load("fruit-stand-coco.zip")
     print(ds.summary())
     unripe = ds.filter(cls="Mango", condition="Unripe")
 

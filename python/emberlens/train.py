@@ -1,4 +1,4 @@
-"""Train a model on a Nhan dataset with PyTorch, on a laptop.
+"""Train a model on a Emberlens dataset with PyTorch, on a laptop.
 
 Two kinds:
   classifier  "what is this object?"  ResNet-18 on box crops
@@ -14,7 +14,7 @@ import random
 from pathlib import Path
 from typing import Callable, List, Optional
 
-from .errors import NhanError
+from .errors import EmberlensError
 from .model import _n
 from .extras import require_torch
 from .torch_data import CropDataset, DetectionDataset, detection_collate, need_two_labels
@@ -94,7 +94,7 @@ def train_classifier(
     val = CropDataset(data, "val", size, padding, classes=classes)
     test = CropDataset(data, "test", size, padding, classes=classes)
     if len(train) == 0:
-        raise NhanError("There are no boxes in the train split. Try --split 80/10/10.")
+        raise EmberlensError("There are no boxes in the train split. Try --split 80/10/10.")
     _seed(torch, seed)
     dev = _device(torch, device, allow_mps=True)
     log(f"Training a classifier for {_n(len(classes), 'label')} on {_n(len(train), 'box')} ({dev.type}).")
@@ -125,7 +125,7 @@ def train_classifier(
             best = score
             torch.save(
                 {
-                    "nhan_model": 1,
+                    "emberlens_model": 1,
                     "kind": "classifier",
                     "arch": "resnet18",
                     "classes": classes,
@@ -221,12 +221,12 @@ def train_detector(
     torch, _ = require_torch()
     data = ds.relabel(target)
     if not data.labels:
-        raise NhanError("There are no boxes to learn from.")
+        raise EmberlensError("There are no boxes to learn from.")
     train = DetectionDataset(data, "train", classes=data.labels)
     val = DetectionDataset(data, "val", classes=data.labels)
     test = DetectionDataset(data, "test", classes=data.labels)
     if len(train) == 0:
-        raise NhanError("There are no photos in the train split. Try --split 80/10/10.")
+        raise EmberlensError("There are no photos in the train split. Try --split 80/10/10.")
     _seed(torch, seed)
     # Apple MPS lacks some detection operations: use CPU there.
     dev = _device(torch, device, allow_mps=False)
@@ -265,7 +265,7 @@ def train_detector(
             best = rank
             torch.save(
                 {
-                    "nhan_model": 1,
+                    "emberlens_model": 1,
                     "kind": "detector",
                     "arch": DETECTOR_ARCH,
                     "classes": classes,
@@ -298,14 +298,14 @@ def load_model(path):
     if p.is_dir():
         p = p / MODEL_FILE
     if not p.is_file():
-        raise NhanError(f"Can't find a model at {p}. Train one first with: ./nhan train")
+        raise EmberlensError(f"Can't find a model at {p}. Train one first with: ./emberlens train")
     ckpt = torch.load(p, map_location="cpu", weights_only=True)
     if ckpt.get("kind") == "classifier":
         model = _classifier(tv, len(ckpt["classes"]), pretrained=False)
     elif ckpt.get("kind") == "detector":
         model = _detector(len(ckpt["classes"]), pretrained=False)
     else:
-        raise NhanError(f"{p} is not a Nhan model.")
+        raise EmberlensError(f"{p} is not a Emberlens model.")
     model.load_state_dict(ckpt["state_dict"])
     model.eval()
     return model, ckpt
@@ -316,7 +316,7 @@ def predict(model_path, images: List, threshold: float = 0.5) -> List[dict]:
 
     classifier: [{"file", "label", "score"}]
     detector:   [{"file", "width", "height", "boxes": [{"label", "score", "x", "y", "w", "h"}]}]
-                (x, y, w, h normalised 0..1, like nhan.Box)
+                (x, y, w, h normalised 0..1, like emberlens.Box)
     """
     torch, _ = require_torch()
     from torchvision import transforms as T

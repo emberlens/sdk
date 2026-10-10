@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 
-from .errors import MissingExtra, NhanError
+from .errors import MissingExtra, EmberlensError
 
 # Package names on PyPI per extra. All permissive: Pillow (MIT-CMU),
 # PyTorch and torchvision (BSD-3).
@@ -39,7 +39,7 @@ def require_torch():
 def install(extra: str) -> None:
     """pip install the packages of `extra` into the running Python."""
     if extra not in EXTRAS:
-        raise NhanError(f'Unknown extra "{extra}". Use: {", ".join(EXTRAS)}.')
+        raise EmberlensError(f'Unknown extra "{extra}". Use: {", ".join(EXTRAS)}.')
     packages = EXTRAS[extra]
     print(f"Installing {', '.join(packages)} … (this can take a few minutes)")
     has_pip = subprocess.run([sys.executable, "-m", "pip", "--version"], capture_output=True).returncode == 0
@@ -51,5 +51,5 @@ def install(extra: str) -> None:
         subprocess.run([sys.executable, "-m", "ensurepip", "--upgrade"], check=False)
         cmd = [sys.executable, "-m", "pip", "install", "--quiet", *packages]
     if subprocess.run(cmd).returncode != 0:
-        raise NhanError("The install failed. Check your internet connection and try again.")
+        raise EmberlensError("The install failed. Check your internet connection and try again.")
     print("Done.")

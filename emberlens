@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Nhan SDK launcher (macOS / Linux).
+# Emberlens SDK launcher (macOS / Linux).
 # The first run makes a private Python environment in python/.venv.
-# Nothing is installed system-wide. Start with:  ./nhan help
+# Nothing is installed system-wide. Start with:  ./emberlens help
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV="$HERE/python/.venv"
@@ -16,11 +16,11 @@ if [ ! -x "$PY" ]; then
     fi
   done
   if [ -z "$BASE" ]; then
-    echo "The Nhan SDK needs Python 3.9 or newer."
+    echo "The Emberlens SDK needs Python 3.9 or newer."
     echo "Get it from https://www.python.org/downloads/ and run this again."
     exit 1
   fi
-  echo "First run: setting up the Nhan SDK (a few seconds)..."
+  echo "First run: setting up the Emberlens SDK (a few seconds)..."
   if ! "$BASE" -m venv "$VENV" >/dev/null 2>&1; then
     # Some Python builds cannot add pip to a new environment. Start again
     # with uv if present, else without pip (the core SDK does not need it).
@@ -38,4 +38,4 @@ if [ ! -x "$PY" ]; then
 fi
 
 export PYTHONPATH="$HERE/python${PYTHONPATH:+:$PYTHONPATH}"
-exec "$PY" -m nhan "$@"
+exec "$PY" -m emberlens "$@"

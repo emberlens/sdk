@@ -1,18 +1,18 @@
-# Train your own PyTorch model with a Nhan dataset.
-# Needs PyTorch:  ./nhan install train
-# Run:            ./nhan run examples/02_my_own_training.py path/to/your-export.zip
+# Train your own PyTorch model with a Emberlens dataset.
+# Needs PyTorch:  ./emberlens install train
+# Run:            ./emberlens run examples/02_my_own_training.py path/to/your-export.zip
 import sys
 from pathlib import Path
 
 import torch
 import torchvision
 
-import nhan
-from nhan.torch_data import detection_collate
+import emberlens
+from emberlens.torch_data import detection_collate
 
 # No path given: use the sample export that ships with the SDK.
 sample = Path(__file__).resolve().parent.parent / "fixtures" / "coco_joined"
-ds = nhan.load(sys.argv[1] if len(sys.argv) > 1 else sample)
+ds = emberlens.load(sys.argv[1] if len(sys.argv) > 1 else sample)
 ds = ds.relabel("class")             # learn only the main class (Mango, Strawberry…)
 train = ds.torch_detection("train")  # images + boxes in torchvision style
 print("Classes:", train.classes)

@@ -1,12 +1,12 @@
 {
-  "nhan_card_version": 1,
+  "emberlens_card_version": 1,
   "created_at": "2026-10-08T00:00:00.000Z",
   "project": {
     "name": "Fruit stand",
     "category": "Food"
   },
-  "format": "voc",
-  "label_style": "separate_fields",
+  "format": "coco",
+  "label_style": "joined",
   "separator": "_",
   "lowercase": false,
   "root_category": "fruit",
@@ -32,14 +32,31 @@
   ],
   "labels": [
     {
-      "name": "Mango",
+      "name": "Mango_Ripe_Alphonso",
       "class": "Mango",
-      "attributes": {}
+      "attributes": {
+        "Condition": "Ripe",
+        "Type": "Alphonso"
+      }
+    },
+    {
+      "name": "Mango_Unripe",
+      "class": "Mango",
+      "attributes": {
+        "Condition": "Unripe"
+      }
     },
     {
       "name": "Strawberry",
       "class": "Strawberry",
       "attributes": {}
+    },
+    {
+      "name": "Strawberry_Ripe",
+      "class": "Strawberry",
+      "attributes": {
+        "Condition": "Ripe"
+      }
     }
   ],
   "shapes": "mixed",

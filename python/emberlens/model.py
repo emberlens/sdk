@@ -133,7 +133,7 @@ class Image:
 
         img = PIL_Image.open(self.path)
         img.load()
-        # Nhan exports are stored upright. Photos from other tools may carry
+        # Emberlens exports are stored upright. Photos from other tools may carry
         # an EXIF Orientation tag; turn them upright like a viewer would.
         return ImageOps.exif_transpose(img)
 
@@ -142,12 +142,12 @@ class Image:
 class Dataset:
     """A whole export. Iterate it to get Images.
 
-    name            project name (from nhan.json) or folder name
+    name            project name (from emberlens.json) or folder name
     format          "coco", "yolo" or "voc"
     root            folder with the export files
     classes         main classes, in project order
     sub_categories  {"Condition": ["Ripe", "Unripe"], ...}
-    card            the parsed nhan.json, or None for exports without one
+    card            the parsed emberlens.json, or None for exports without one
     """
 
     name: str
@@ -172,7 +172,7 @@ class Dataset:
 
     def __repr__(self) -> str:
         return (
-            f"<nhan.Dataset {self.name!r}: {len(self.images)} images, "
+            f"<emberlens.Dataset {self.name!r}: {len(self.images)} images, "
             f"{self.box_count} boxes, format={self.format}>"
         )
 
@@ -201,9 +201,9 @@ class Dataset:
     def split(self, name: str) -> "Dataset":
         """Only the images of one split: "train", "val" or "test"."""
         if name not in SPLITS:
-            from .errors import NhanError
+            from .errors import EmberlensError
 
-            raise NhanError(f'Unknown split "{name}". Use one of: train, val, test.')
+            raise EmberlensError(f'Unknown split "{name}". Use one of: train, val, test.')
         return self._copy([img for img in self.images if img.split == name])
 
     def filter(
@@ -251,9 +251,9 @@ class Dataset:
         """New random train/val/test split. Same seed, same result."""
         total = train + val + test
         if total <= 0:
-            from .errors import NhanError
+            from .errors import EmberlensError
 
-            raise NhanError("The split parts must add up to more than 0.")
+            raise EmberlensError("The split parts must add up to more than 0.")
         order = list(range(len(self.images)))
         random.Random(seed).shuffle(order)
         n = len(order)
@@ -302,9 +302,9 @@ class Dataset:
                     nb.label = separator.join(parts)
                 else:
                     if t not in sub_names and not any(b.get(target) for b in self.boxes):
-                        from .errors import NhanError
+                        from .errors import EmberlensError
 
-                        raise NhanError(
+                        raise EmberlensError(
                             f'Unknown target "{target}". Use label, class, joined'
                             + "".join(f", {n}" for n in self.sub_categories)
                             + "."
@@ -365,7 +365,7 @@ class Dataset:
     # ---- output -------------------------------------------------------
 
     def to_coco(self, out_dir) -> Path:
-        """Write as COCO (Nhan layout). Returns the folder."""
+        """Write as COCO (Emberlens layout). Returns the folder."""
         from .writers import write
 
         return write(self, out_dir, "coco")
@@ -383,7 +383,7 @@ class Dataset:
         return write(self, out_dir, "voc")
 
     def to_json(self, path) -> Path:
-        """Write one simple JSON file with everything (sdk/schema/nhan-dataset.schema.json)."""
+        """Write one simple JSON file with everything (sdk/schema/emberlens-dataset.schema.json)."""
         from .writers import write_json
 
         return write_json(self, path)

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nhan.app/schema/nhan-card.schema.json",
-  "title": "Nhan dataset card (nhan.json)",
-  "description": "Written by the Nhan app (and the SDK) next to every export. Says what each label name in the export means. See sdk/SPEC.md section 3.",
+  "$id": "https://emberlens.app/schema/emberlens-card.schema.json",
+  "title": "Emberlens dataset card (emberlens.json)",
+  "description": "Written by the Emberlens app (and the SDK) next to every export. Says what each label name in the export means. See sdk/SPEC.md section 3.",
   "type": "object",
   "required": [
-    "nhan_card_version",
+    "emberlens_card_version",
     "format",
     "label_style",
     "classes",
@@ -13,7 +13,7 @@
     "labels"
   ],
   "properties": {
-    "nhan_card_version": {
+    "emberlens_card_version": {
       "type": "integer",
       "const": 1,
       "description": "Layout version of this file. Readers must refuse versions they do not know."
@@ -176,7 +176,7 @@
     },
     "written_by": {
       "type": "string",
-      "description": "Set by tools other than the app, e.g. nhan-sdk."
+      "description": "Set by tools other than the app, e.g. emberlens-sdk."
     }
   }
 }

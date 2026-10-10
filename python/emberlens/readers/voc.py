@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from ..errors import NhanError
+from ..errors import EmberlensError
 from ..minixml import parse_string
 from ..model import SPLITS, Box, Image
 
@@ -26,17 +26,17 @@ def _parse(path: Path) -> ET.Element:
     except ImportError:
         pass  # expat is missing: use the small built-in reader
     except ET.ParseError as e:
-        raise NhanError(f"{path.name} is not valid XML: {e}") from None
+        raise EmberlensError(f"{path.name} is not valid XML: {e}") from None
     try:
         return parse_string(text)
     except ValueError as e:
-        raise NhanError(f"{path.name} is not valid XML: {e}") from None
+        raise EmberlensError(f"{path.name} is not valid XML: {e}") from None
 
 
 def read(root: Path) -> Tuple[List[Image], List[str]]:
     ann_dir = root / "Annotations"
     if not ann_dir.is_dir():
-        raise NhanError(f"No Annotations folder found in {root}.")
+        raise EmberlensError(f"No Annotations folder found in {root}.")
     split_of: Dict[str, str] = {}
     for split in SPLITS:
         listing = root / "ImageSets" / "Main" / f"{split}.txt"

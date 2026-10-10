@@ -1,6 +1,6 @@
-# Nhan export format and SDK specification
+# Emberlens export format and SDK specification
 
-Version 1, 2026-10-08 (polygons added the same day). This file is for people who write a Nhan reader in another language, or check one. The Python SDK in `python/nhan/` is the reference implementation. The files in `fixtures/` are the test data.
+Version 1, 2026-10-08 (polygons added the same day). This file is for people who write a Emberlens reader in another language, or check one. The Python SDK in `python/emberlens/` is the reference implementation. The files in `fixtures/` are the test data.
 
 ## 1. Words
 
@@ -11,7 +11,7 @@ Version 1, 2026-10-08 (polygons added the same day). This file is for people who
 | sub-category | an extra label, e.g. `Condition`, with values such as `Ripe` and `Unripe` |
 | value | one value of a sub-category on one box. A box may have no value. |
 | label | the name written in the format's files. It is the class, or the class joined with values (`Mango_Ripe`). |
-| card | `nhan.json`, the file that says what each label means (§3) |
+| card | `emberlens.json`, the file that says what each label means (§3) |
 
 ## 2. Zip layout
 
@@ -20,7 +20,7 @@ The zip holds the dataset at its root. Readers should also accept one extra top 
 ### 2.1 COCO
 
 ```
-nhan.json
+emberlens.json
 images/{train,val,test}/<id>.jpg
 annotations/instances_{train,val,test}.json
 ```
@@ -34,7 +34,7 @@ annotations/instances_{train,val,test}.json
 ### 2.2 YOLO
 
 ```
-nhan.json
+emberlens.json
 data.yaml
 images/{train,val,test}/<id>.jpg
 labels/{train,val,test}/<id>.txt
@@ -48,7 +48,7 @@ labels/{train,val,test}/<id>.txt
 ### 2.3 Pascal VOC
 
 ```
-nhan.json
+emberlens.json
 JPEGImages/<id>.jpg
 Annotations/<id>.xml
 ImageSets/Main/{train,val,test}.txt     one photo id per line
@@ -61,15 +61,15 @@ ImageSets/Main/{train,val,test}.txt     one photo id per line
 
 ### 2.4 Splits
 
-The app assigns train / val / test with a seeded shuffle (`nhan.json` `split`, `seed`). With fewer than 3 photos, every photo is in train. Every photo is in exactly one split.
+The app assigns train / val / test with a seeded shuffle (`emberlens.json` `split`, `seed`). With fewer than 3 photos, every photo is in train. Every photo is in exactly one split.
 
-## 3. The card: `nhan.json`
+## 3. The card: `emberlens.json`
 
-Schema: [`schema/nhan-card.schema.json`](schema/nhan-card.schema.json). The app writes it into every export (decision D-022). Older exports and other tools may not have one (§5.4).
+Schema: [`schema/emberlens-card.schema.json`](schema/emberlens-card.schema.json). The app writes it into every export (decision D-022). Older exports and other tools may not have one (§5.4).
 
 ```json
 {
-  "nhan_card_version": 1,
+  "emberlens_card_version": 1,
   "format": "yolo",
   "label_style": "joined",
   "separator": ".",
@@ -89,7 +89,7 @@ Schema: [`schema/nhan-card.schema.json`](schema/nhan-card.schema.json). The app 
 - `labels` lists **every label name in the files, in export order**. In YOLO, the position in this list is the class index.
 - Every name in the card is written exactly as in the files. When `lowercase` is true, all names are lower case.
 - A sub-category with no value is **absent** from `attributes`. The text "none" or "null" never appears as a value.
-- Readers must refuse a `nhan_card_version` they do not know.
+- Readers must refuse a `emberlens_card_version` they do not know.
 - `shapes` is `boxes`, `polygons` or `mixed`.
 
 ### 3.2 Label styles
@@ -112,7 +112,7 @@ Image    id, file, width, height, split ("train" | "val" | "test"), boxes[]
 Box      label, class, attributes{sub-category: value}, x, y, w, h, polygon? [[x, y], …]
 ```
 
-`x, y` is the top-left corner. `x, y, w, h` are normalised 0..1 of the image size. A polygon label also has `polygon` (at least 3 corners, normalised). `x, y, w, h` is then the box around it. A box has no `polygon` key. `dataset.json` is this model as JSON. Its schema is [`schema/nhan-dataset.schema.json`](schema/nhan-dataset.schema.json). `file` is relative to the JSON file, with `/` separators, and numbers have 6 decimals.
+`x, y` is the top-left corner. `x, y, w, h` are normalised 0..1 of the image size. A polygon label also has `polygon` (at least 3 corners, normalised). `x, y, w, h` is then the box around it. A box has no `polygon` key. `dataset.json` is this model as JSON. Its schema is [`schema/emberlens-dataset.schema.json`](schema/emberlens-dataset.schema.json). `file` is relative to the JSON file, with `/` separators, and numbers have 6 decimals.
 
 ### 4.1 Coordinates per format
 
@@ -128,8 +128,8 @@ YOLO files do not store the image size. Read it from the image header (JPEG SOF 
 
 ## 5. Reading, step by step
 
-1. **Open.** A zip: unzip it. Refuse any member path that leaves the target folder ("zip slip"). Find the dataset root: the folder that holds `nhan.json`, `data.yaml`, `annotations/` or `Annotations/`, going down one level if the zip has a single top folder.
-2. **Card.** Read `nhan.json` if present.
+1. **Open.** A zip: unzip it. Refuse any member path that leaves the target folder ("zip slip"). Find the dataset root: the folder that holds `emberlens.json`, `data.yaml`, `annotations/` or `Annotations/`, going down one level if the zip has a single top folder.
+2. **Card.** Read `emberlens.json` if present.
 3. **Format.** Take `card.format`. Without a card: `Annotations/*.xml` means VOC, `data.yaml` or `labels/**/*.txt` means YOLO, `annotations/*.json` means COCO. **Check for the files, not only the folder name**: macOS and Windows ignore letter case, so `annotations` and `Annotations` are the same folder there.
 4. **Read** the format files into the model, with `label` and `class` both set to the name in the file, and any per-box attributes.
 5. **Resolve labels.** For every box whose label is in `card.labels`: set `class` from the card, and set `attributes` = the card's attributes, overlaid with the attributes from the file.
@@ -145,7 +145,7 @@ Only a small YAML subset is used: `key: value` lines, a flow list (`[a, 'b c']`)
 
 ### 4.2 Photo orientation
 
-Nhan exports store every photo **upright** (any EXIF Orientation is applied, and the file has no orientation tag), and labels refer to that upright photo. Readers of other datasets should apply EXIF Orientation before using pixels, as the Python SDK's `Image.open()` does.
+Emberlens exports store every photo **upright** (any EXIF Orientation is applied, and the file has no orientation tag), and labels refer to that upright photo. Readers of other datasets should apply EXIF Orientation before using pixels, as the Python SDK's `Image.open()` does.
 
 ### 4.3 Resized exports
 
@@ -170,7 +170,7 @@ Writers produce the layouts of §2 and a new card (with `"written_by"`). Rules:
 
 ## 7. Checking a port
 
-`fixtures/` holds real exports made by the app's code: the C++ export engine plus the Dart manifest and card code, through `packages/nhan_data/tool/make_sdk_fixtures.dart`.
+`fixtures/` holds real exports made by the app's code: the C++ export engine plus the Dart manifest and card code, through `packages/emberlens_data/tool/make_sdk_fixtures.dart`.
 
 | Fixture | Format | Style | Notes |
 |---|---|---|---|

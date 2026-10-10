@@ -1,5 +1,5 @@
 {
-  "nhan_dataset_version": 1,
+  "emberlens_dataset_version": 1,
   "name": "Fruit stand",
   "source_format": "yolo",
   "classes": [

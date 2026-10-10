@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from ..errors import NhanError
+from ..errors import EmberlensError
 from ..imagesize import image_size
 from ..model import SPLITS, Box, Image, box_from_polygon
 
@@ -89,7 +89,7 @@ def parse_data_yaml(text: str) -> Dict[str, object]:
 
 def _as_rectangle(pts):
     """(x, y, w, h) if the 4 corners are an upright box, clockwise from
-    top-left (how Nhan writes a box in a segmentation file), else None."""
+    top-left (how Emberlens writes a box in a segmentation file), else None."""
     if len(pts) != 4:
         return None
     (x0, y0), (x1, y1), (x2, y2), (x3, y3) = pts
@@ -104,12 +104,12 @@ def read(root: Path) -> Tuple[List[Image], List[str]]:
     if not yaml_path.is_file():
         found = sorted(root.glob("*.yaml"))
         if not found:
-            raise NhanError(f"No data.yaml found in {root}.")
+            raise EmberlensError(f"No data.yaml found in {root}.")
         yaml_path = found[0]
     data = parse_data_yaml(yaml_path.read_text(encoding="utf-8"))
     names = data.get("names") or []
     if not isinstance(names, list):
-        raise NhanError("data.yaml has no names list.")
+        raise EmberlensError("data.yaml has no names list.")
     base = root / str(data.get("path") or ".")
     images: List[Image] = []
     for split in SPLITS:

@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://nhan.app/schema/nhan-dataset.schema.json",
-  "title": "Nhan dataset (dataset.json)",
-  "description": "One file with every photo and box, in the same shape for every source format. Written by `./nhan convert --to json` and used as the expected result in sdk/fixtures/expected/. See sdk/SPEC.md section 4.",
+  "$id": "https://emberlens.app/schema/emberlens-dataset.schema.json",
+  "title": "Emberlens dataset (dataset.json)",
+  "description": "One file with every photo and box, in the same shape for every source format. Written by `./emberlens convert --to json` and used as the expected result in sdk/fixtures/expected/. See sdk/SPEC.md section 4.",
   "type": "object",
   "required": [
-    "nhan_dataset_version",
+    "emberlens_dataset_version",
     "name",
     "source_format",
     "classes",
@@ -14,7 +14,7 @@
     "images"
   ],
   "properties": {
-    "nhan_dataset_version": {
+    "emberlens_dataset_version": {
       "type": "integer",
       "const": 1
     },

@@ -8,8 +8,8 @@ import json
 import unittest
 from pathlib import Path
 
-import nhan
-from nhan.writers import dataset_dict
+import emberlens
+from emberlens.writers import dataset_dict
 
 from .helpers import FIXTURES, NAMES, TempDirCase
 
@@ -61,28 +61,28 @@ def load_schema(name):
 
 class SchemaTest(TempDirCase):
     def test_app_cards_match_the_card_schema(self):
-        schema = load_schema("nhan-card.schema.json")
+        schema = load_schema("emberlens-card.schema.json")
         for name in NAMES:
             with self.subTest(name):
-                card = json.loads((FIXTURES / name / "nhan.json").read_text())
+                card = json.loads((FIXTURES / name / "emberlens.json").read_text())
                 self.assertEqual(check(card, schema, schema), [])
 
     def test_sdk_cards_match_the_card_schema(self):
-        schema = load_schema("nhan-card.schema.json")
-        out = nhan.load(FIXTURES / "coco_fields").relabel("condition").to_voc(self.tmp / "v")
-        card = json.loads((out / "nhan.json").read_text())
+        schema = load_schema("emberlens-card.schema.json")
+        out = emberlens.load(FIXTURES / "coco_fields").relabel("condition").to_voc(self.tmp / "v")
+        card = json.loads((out / "emberlens.json").read_text())
         self.assertEqual(check(card, schema, schema), [])
 
     def test_expected_files_match_the_dataset_schema(self):
-        schema = load_schema("nhan-dataset.schema.json")
+        schema = load_schema("emberlens-dataset.schema.json")
         for name in NAMES:
             with self.subTest(name):
                 data = json.loads((FIXTURES / "expected" / f"{name}.json").read_text())
                 self.assertEqual(check(data, schema, schema), [])
 
     def test_the_checker_finds_mistakes(self):
-        schema = load_schema("nhan-card.schema.json")
-        bad = {"nhan_card_version": 2, "format": "png", "label_style": "joined", "classes": [], "sub_categories": [], "labels": [{"name": "a"}], "oops": 1}
+        schema = load_schema("emberlens-card.schema.json")
+        bad = {"emberlens_card_version": 2, "format": "png", "label_style": "joined", "classes": [], "sub_categories": [], "labels": [{"name": "a"}], "oops": 1}
         errors = check(bad, schema, schema)
         self.assertTrue(any("must be 1" in e for e in errors))
         self.assertTrue(any("png" in e for e in errors))
