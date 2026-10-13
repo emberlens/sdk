@@ -219,4 +219,6 @@ The app reads two sets of keys.
 
 **Ultralytics YOLO keys** (written by `model.export(format="onnx")`): `names` (`{0: 'person', 1: 'bicycle'}`), `imgsz` (`[640, 640]`), `task` (`detect` or `classify`; others are refused), `author`.
 
-The app refuses a file larger than 100 MB, a file that is not ONNX, a file without class names or input size, and an unknown `emberlens_model` version. Class names that the project does not have are shown as "not in this project" and are never used on boxes.
+**Hugging Face files** (the usual way on huggingface.co, owner D-038): the class names are not inside the `.onnx` but in `config.json` next to it. The user picks the `.onnx` file and `config.json` together, and `preprocessor_config.json` if there is one. The app reads `id2label` (class names by index) and `architectures` (`…ForObjectDetection` = detector, `…ForImageClassification` = classifier) from `config.json`, and `size` or `crop_size` from `preprocessor_config.json`. Without a preprocessor file the input size is "not given". Names inside the `.onnx` win over `config.json`.
+
+The app refuses a file larger than 100 MB, a file that is not ONNX, a file without class names, an Emberlens or YOLO file without input size, and an unknown `emberlens_model` version. Class names that the project does not have are shown as "not in this project" and are never used on boxes.
