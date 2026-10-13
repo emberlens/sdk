@@ -199,23 +199,24 @@ Data: 4 photos (80×60, 64×48, 60×80, 40×40), split 2/1/1. One photo has no b
 | `imagesize.py`, `minixml.py` | §4.1 image header, §5.1 fallback XML |
 | `preview.py`, `crops.py`, `torch_data.py`, `train.py`, `cli.py` | tools on top; not needed for a port |
 
-## 9. Model file (`.emberlensmodel`)
+## 9. Model file (plain `.onnx`)
 
-The app's Test step (D-038) takes one file per project. It is a zip with two entries at the top:
+The app's Test step (D-038) takes one standard ONNX file per project. Any tool can open it (ONNX Runtime, OpenCV, Netron). The facts the app needs are in the ONNX metadata (`metadata_props`, key/value text). The app reads only the metadata; it does not load the weights to read them.
 
-- `model.onnx`: the trained network.
-- `emberlens-model.json`: the facts below.
+The app reads two sets of keys.
 
-| Key | Type | Required | Meaning |
+**Emberlens SDK keys** (written by `./emberlens export-model`, coming with feature A):
+
+| Key | Value (text) | Required | Meaning |
 |---|---|---|---|
-| `emberlens_model` | int | yes | Format version. The app reads `1` only. |
-| `kind` | string | yes | `classifier` (names what is in a box) or `detector` (finds and names objects). |
-| `classes` | string[] | yes | Class names, in the network's output order. |
-| `size` | int | yes | Input size in pixels (for example 224 or 640). |
-| `test_accuracy` | number | no | 0..1, on the export's test split. |
-| `trained_at` | string | no | ISO 8601 time. |
-| `source_project` | string | no | Project name from the export. |
+| `emberlens_model` | `1` | yes | Format version. The app reads `1` only. |
+| `kind` | `classifier` or `detector` | yes | Names what is in a box, or finds and names objects. |
+| `classes` | JSON list, e.g. `["Alphonso","Kent"]` | yes | Class names, in the network's output order. |
+| `size` | e.g. `224` | yes | Input size in pixels. |
+| `test_accuracy` | e.g. `0.88` | no | 0..1, on the export's test split. |
+| `trained_at` | ISO 8601 time | no | When it was trained. |
+| `source_project` | text | no | Project name from the export. |
 
-The app refuses a file larger than 100 MB, a file with another version, and a file without `model.onnx`. Class names that the project does not have are shown as "not in this project" and are never used on boxes.
+**Ultralytics YOLO keys** (written by `model.export(format="onnx")`): `names` (`{0: 'person', 1: 'bicycle'}`), `imgsz` (`[640, 640]`), `task` (`detect` or `classify`; others are refused), `author`.
 
-The SDK does not write this file yet. `./emberlens export-model` comes with feature A (docs/PREMIUM_NEXT.md §1).
+The app refuses a file larger than 100 MB, a file that is not ONNX, a file without class names or input size, and an unknown `emberlens_model` version. Class names that the project does not have are shown as "not in this project" and are never used on boxes.
