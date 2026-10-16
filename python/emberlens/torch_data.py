@@ -11,9 +11,10 @@
 
 from __future__ import annotations
 
-from .crops import crop_box
+from .crops import crop_for_model
 from .errors import EmberlensError
 from .extras import require_torch
+from .model import OTHER
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
@@ -64,12 +65,16 @@ class DetectionDataset:
 
 
 class CropDataset:
-    def __init__(self, ds, split: str = "train", size: int = 224, padding: float = 0.1, classes=None, augment=False):
+    def __init__(self, ds, split: str = "train", size: int = 224, padding: float = 0.1, classes=None, augment=False, with_other=False):
         require_torch()
         self.items = [
             (img, b) for img in ds.images if split is None or img.split == split for b in img.boxes
         ]
         self.classes = list(classes) if classes else ds.labels
+        if with_other:
+            # YOLOX boxes that match no label: class "other", always last.
+            self.classes = [c for c in self.classes if c != OTHER] + [OTHER]
+            self.items += ds.other_boxes(split)
         self.index = {n: i for i, n in enumerate(self.classes)}
         self.items = [(img, b) for img, b in self.items if b.label in self.index]
         self.size = size
@@ -83,7 +88,7 @@ class CropDataset:
         from torchvision import transforms as T
 
         img, box = self.items[i]
-        crop = crop_box(img.open().convert("RGB"), box, self.padding).resize((self.size, self.size))
+        crop = crop_for_model(img.open().convert("RGB"), box, self.padding, self.size)
         steps = [T.RandomHorizontalFlip()] if self.augment else []
         steps += [T.ToTensor(), T.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
         return T.Compose(steps)(crop), self.index[box.label]

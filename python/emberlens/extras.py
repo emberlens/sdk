@@ -14,6 +14,8 @@ from .errors import MissingExtra, EmberlensError
 EXTRAS = {
     "images": ["pillow"],
     "train": ["pillow", "torch", "torchvision"],
+    # Only for `export-model`: writes the class names into the .onnx file (Apache-2.0, D-033).
+    "onnx": ["onnx"],
 }
 
 
@@ -34,6 +36,13 @@ def require_torch():
         raise MissingExtra("train", "PyTorch and torchvision") from None
     require_pillow()
     return importlib.import_module("torch"), importlib.import_module("torchvision")
+
+
+def require_onnx():
+    try:
+        return importlib.import_module("onnx")
+    except ImportError:
+        raise MissingExtra("onnx", "onnx") from None
 
 
 def install(extra: str) -> None:

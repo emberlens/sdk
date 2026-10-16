@@ -80,7 +80,8 @@ Schema: [`schema/emberlens-card.schema.json`](schema/emberlens-card.schema.json)
                      {"name": "type", "values": ["alphonso", "kesar"]}],
   "labels": [{"name": "mango.ripe.alphonso", "class": "mango",
               "attributes": {"condition": "ripe", "type": "alphonso"}},
-             {"name": "strawberry", "class": "strawberry", "attributes": {}}]
+             {"name": "strawberry", "class": "strawberry", "attributes": {}}],
+  "other_boxes": [{"image": "photo-1.jpg", "x": 0.0, "y": 0.0, "w": 0.3, "h": 0.3, "score": 0.81}]
 }
 ```
 
@@ -91,6 +92,7 @@ Schema: [`schema/emberlens-card.schema.json`](schema/emberlens-card.schema.json)
 - A sub-category with no value is **absent** from `attributes`. The text "none" or "null" never appears as a value.
 - Readers must refuse a `emberlens_card_version` they do not know.
 - `shapes` is `boxes`, `polygons` or `mixed`.
+- `other_boxes` is optional. Absent means none. The app writes it only when the user turns on "Add data for your model" (feature A, D-033). Each entry is a box that the detector (YOLOX) found and that matches no label (IoU < 0.3 with every label). `image` is the photo file name as in the export (no folder), `x`, `y`, `w`, `h` are normalised 0..1 with the top-left origin (as in §4), `score` is the detector score 0..1. The box belongs to the split of its photo. A reader that does not know the field ignores it. The SDK trains these boxes as the class `other`, always the last class (§9). An entry whose photo is not in the export is ignored.
 
 ### 3.2 Label styles
 
@@ -197,7 +199,7 @@ Data: 4 photos (80×60, 64×48, 60×80, 40×40), split 2/1/1. One photo has no b
 | `model.py` | §4 model; filter, relabel, resplit, counts |
 | `writers.py` | §6 and `dataset.json` |
 | `imagesize.py`, `minixml.py` | §4.1 image header, §5.1 fallback XML |
-| `preview.py`, `crops.py`, `torch_data.py`, `train.py`, `cli.py` | tools on top; not needed for a port |
+| `preview.py`, `crops.py`, `torch_data.py`, `train.py`, `export_model.py`, `cli.py` | tools on top; not needed for a port. `crops.crop_for_model` is the one crop rule (§9.1). |
 
 ## 9. Model file (plain `.onnx`)
 
@@ -205,7 +207,7 @@ The app's Test step (D-038) takes one standard ONNX file per project. Any tool c
 
 The app reads two sets of keys.
 
-**Emberlens SDK keys** (written by `./emberlens export-model`, coming with feature A):
+**Emberlens SDK keys** (written by `./emberlens export-model`):
 
 | Key | Value (text) | Required | Meaning |
 |---|---|---|---|
@@ -213,9 +215,21 @@ The app reads two sets of keys.
 | `kind` | `classifier` or `detector` | yes | Names what is in a box, or finds and names objects. |
 | `classes` | JSON list, e.g. `["Alphonso","Kent"]` | yes | Class names, in the network's output order. |
 | `size` | e.g. `224` | yes | Input size in pixels. |
+| `input_size` | e.g. `224` | yes (SDK files) | Same number as `size`. |
+| `crop_pad` | e.g. `0.1` | yes (SDK files) | Padding around the box before the crop, as a share of the box width and height (each side). |
+| `resize_mode` | `stretch` | yes (SDK files) | How the crop becomes `input_size` x `input_size`: `stretch` = resize each side separately, the shape is not kept. |
+| `mean` | JSON list, e.g. `[0.485,0.456,0.406]` | yes (SDK files) | Subtract per RGB channel, after scaling pixels to 0..1. |
+| `std` | JSON list, e.g. `[0.229,0.224,0.225]` | yes (SDK files) | Divide per RGB channel after the mean. |
+| `labels_mode` | e.g. `class`, `label`, `condition` | no | What the classes are: the `--labels` choice used in training. |
 | `test_accuracy` | e.g. `0.88` | no | 0..1, on the export's test split. |
 | `trained_at` | ISO 8601 time | no | When it was trained. |
 | `source_project` | text | no | Project name from the export. |
+
+For `classes`: if the export had `other_boxes` (§3.1), the last class is `other`. It means "a box that is none of the project's objects". The app never gives a box the class `other`; it leaves the box without a class. Input is 1x3xSxS, RGB, any batch size. Output `scores` is one number per class (raw scores, not yet softmax), in the order of `classes`.
+
+### 9.1 The crop rule
+
+The app must cut each box exactly as training did: take the box, add `crop_pad` of its width and height on every side (clipped to the photo), cut it out, and stretch it to `input_size` x `input_size` (`resize_mode`), then scale to 0..1 and apply `mean` and `std`. In the SDK this is `crops.crop_for_model(pil_image, box, padding=0.1, size=224)`. Training (`train.py`, `torch_data.py`), `crops` with `--size` and `export-model` all use that one function. Do not hard-code these numbers in the app: read the keys.
 
 **Ultralytics YOLO keys** (written by `model.export(format="onnx")`): `names` (`{0: 'person', 1: 'bicycle'}`), `imgsz` (`[640, 640]`), `task` (`detect` or `classify`; others are refused), `author`.
 

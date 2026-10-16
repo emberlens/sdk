@@ -1,6 +1,7 @@
 # Optional: install the SDK into your own Python with
 #   pip install -e "sdk/python"            (core: no extra libraries)
 #   pip install -e "sdk/python[train]"     (with Pillow, PyTorch, torchvision)
+#   pip install -e "sdk/python[onnx]"      (adds onnx, for export-model)
 # Most users do not need this: the ./emberlens launcher sets everything up.
 [build-system]
 requires = ["setuptools>=61"]
@@ -17,6 +18,7 @@ dependencies = []
 [project.optional-dependencies]
 images = ["pillow"]
 train = ["pillow", "torch", "torchvision"]
+onnx = ["onnx"]
 
 [project.scripts]
 emberlens = "emberlens.cli:main"

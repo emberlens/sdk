@@ -30,6 +30,16 @@ def crop_box(pil_image, box, padding: float = 0.0):
     return pil_image.crop((left, top, right, bottom))
 
 
+def crop_for_model(pil_image, box, padding: float = 0.1, size: int = 224):
+    """The one crop rule for models: 10% padding, then stretch to size x size.
+
+    Training, `export-model` and the app all use this rule, so a model sees
+    the same pixels in training and on the phone. Do not change it without
+    changing the ONNX metadata keys (crop_pad, resize_mode) and the app.
+    """
+    return crop_box(pil_image, box, padding).resize((size, size))
+
+
 def write_crops(ds, out_dir, padding: float = 0.0, size: Optional[int] = None) -> Path:
     require_pillow()
     out = Path(out_dir).expanduser()
@@ -41,9 +51,7 @@ def write_crops(ds, out_dir, padding: float = 0.0, size: Optional[int] = None) -
             continue
         photo = img.open().convert("RGB")
         for n, box in enumerate(img.boxes, 1):
-            crop = crop_box(photo, box, padding)
-            if size:
-                crop = crop.resize((size, size))
+            crop = crop_for_model(photo, box, padding, size) if size else crop_box(photo, box, padding)
             folder = out / img.split / safe_name(box.label)
             folder.mkdir(parents=True, exist_ok=True)
             crop.save(folder / f"{safe_name(img.id)}_{n}.jpg", quality=95)

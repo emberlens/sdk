@@ -73,6 +73,7 @@ Try it now with the sample export that ships with the SDK:
 | Train a model that names objects | `./emberlens train classify EXPORT` |
 | Train a model that finds objects | `./emberlens train detect EXPORT` |
 | Use a trained model on new photos | `./emberlens predict MODEL-FOLDER photo.jpg` |
+| Make the model file for the app | `./emberlens export-model MODEL-FOLDER` |
 | Check that the SDK works | `./emberlens selftest` |
 | See all commands | `./emberlens help` |
 
@@ -154,6 +155,17 @@ Useful options:
 
 You get `predictions.json`. For a detector you also get `predictions.html`, a page that shows the found boxes.
 
+**The class "other":** if the export has `other_boxes` (the app's "Add data for your model" tick), `train classify` also learns a last class called `other`: boxes that the detector finds but that are none of your objects. A label of your own may not be called "other" then.
+
+### Put your model in the app
+
+```bash
+./emberlens install onnx                      # once; a small free library
+./emberlens export-model fruit-stand-coco-classify-model
+```
+
+This writes one file, for example `fruit-stand-coco-classify-model.onnx` (use `--out NAME.onnx` to choose the name). The class names and the crop rule are inside the file. Send it to your iPhone (AirDrop or Files), then add it in Project settings, "Your model". It works only for a classifier, not a detector.
+
 **Downloads:** by default, training starts from a model that already knows everyday objects. This works much better with few photos. That starting model is downloaded once from pytorch.org: about 45 MB for `classify`, 75 MB for `detect`. Use `--no-pretrained` to avoid the download.
 
 ---
@@ -227,6 +239,7 @@ There are none to set. To start fresh, delete the `python/.venv` folder; the nex
 | Only reading, filtering, converting, preview | Nothing. It uses only built-in Python and works offline. |
 | Crops and image tools | `./emberlens install images` (Pillow) |
 | Training | `./emberlens install train` (Pillow, PyTorch, torchvision) |
+| Model file for the app | `./emberlens install onnx` (onnx, Apache-2.0) |
 
 ---
 

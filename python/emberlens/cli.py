@@ -22,6 +22,7 @@ examples:
   ./emberlens crops  fruit-stand-coco.zip
   ./emberlens train classify fruit-stand-coco.zip --labels condition
   ./emberlens train detect   fruit-stand-coco.zip
+  ./emberlens export-model fruit-stand-coco-classify-model
   ./emberlens predict fruit-stand-coco-classify-model photo.jpg
 """
 
@@ -125,6 +126,17 @@ def cmd_train(args):
     else:
         train_detector(ds, out, epochs=args.epochs or 10, **common)
     print(f"Next: ./emberlens predict {out} <photo.jpg>")
+    if args.kind == "classify":
+        print(f"Or make the file for the app: ./emberlens export-model {out}")
+
+
+def cmd_export_model(args):
+    from .export_model import export_model
+
+    model = Path(args.model).expanduser()
+    out = Path(args.out) if args.out else _free(Path(f"{model.name or 'model'}.onnx"))
+    path = export_model(model, out)
+    print(f"Send {path.name} to your iPhone (AirDrop or Files), then add it in Project settings > Your model.")
 
 
 def cmd_predict(args):
@@ -250,8 +262,13 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-open", action="store_true", help="do not open the browser")
     s.set_defaults(func=cmd_predict)
 
-    s = sub.add_parser("install", help="install optional parts: images (Pillow) or train (PyTorch)")
-    s.add_argument("extra", choices=["images", "train"])
+    s = sub.add_parser("export-model", help="turn a trained classifier into one .onnx file for the app (needs onnx)")
+    s.add_argument("model", help="the model folder from ./emberlens train classify")
+    s.add_argument("--out", help="the .onnx file to write")
+    s.set_defaults(func=cmd_export_model)
+
+    s = sub.add_parser("install", help="install optional parts: images (Pillow), train (PyTorch) or onnx")
+    s.add_argument("extra", choices=["images", "train", "onnx"])
     s.set_defaults(func=cmd_install)
 
     s = sub.add_parser("run", help="run your own Python script that uses `import emberlens`")

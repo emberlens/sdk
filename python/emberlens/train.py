@@ -15,8 +15,9 @@ from pathlib import Path
 from typing import Callable, List, Optional
 
 from .errors import EmberlensError
-from .model import _n
+from .model import OTHER, _n
 from .extras import require_torch
+from .crops import crop_for_model  # noqa: F401  (the shared crop rule; used through CropDataset)
 from .torch_data import CropDataset, DetectionDataset, detection_collate, need_two_labels
 
 MODEL_FILE = "model.pt"
@@ -89,10 +90,18 @@ def train_classifier(
     torch, tv = require_torch()
     data = ds.relabel(target)
     classes = data.labels
+    with_other = bool(data.other_boxes())
+    if with_other:
+        if any(c.strip().lower() == OTHER for c in classes):
+            raise EmberlensError(
+                f'One of your labels is called "{OTHER}". That name is used for boxes that are none of '
+                "your objects. Rename the label, or export without \"Add data for your model\"."
+            )
+        classes = classes + [OTHER]
     need_two_labels(classes)
-    train = CropDataset(data, "train", size, padding, classes=classes, augment=True)
-    val = CropDataset(data, "val", size, padding, classes=classes)
-    test = CropDataset(data, "test", size, padding, classes=classes)
+    train = CropDataset(data, "train", size, padding, classes=classes, augment=True, with_other=with_other)
+    val = CropDataset(data, "val", size, padding, classes=classes, with_other=with_other)
+    test = CropDataset(data, "test", size, padding, classes=classes, with_other=with_other)
     if len(train) == 0:
         raise EmberlensError("There are no boxes in the train split. Try --split 80/10/10.")
     _seed(torch, seed)

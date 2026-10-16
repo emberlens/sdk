@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
 SPLITS = ("train", "val", "test")
+OTHER = "other"  # class for YOLOX boxes that match no label (always the last class)
 
 
 def _n(count: int, word: str) -> str:
@@ -190,6 +191,26 @@ class Dataset:
         used = {b.label for b in self.boxes}
         ordered = [n for n in self.label_order if n in used]
         return ordered + sorted(used - set(ordered))
+
+    def other_boxes(self, split: Optional[str] = None) -> List[Tuple["Image", Box]]:
+        """[(image, box)] for the card's `other_boxes`: boxes that are none of the labels.
+
+        The app adds them when "Add data for your model" is on. They are
+        found by photo file name. Boxes of photos that are not in this
+        dataset are left out. Each box has the label "other".
+        """
+        by_name = {img.path.name: img for img in self.images}
+        pairs = []
+        for entry in (self.card or {}).get("other_boxes") or []:
+            img = by_name.get(entry.get("image"))
+            if img is None or (split is not None and img.split != split):
+                continue
+            try:
+                x, y, w, h = (float(entry[k]) for k in ("x", "y", "w", "h"))
+            except (KeyError, TypeError, ValueError):
+                continue
+            pairs.append((img, Box(label=OTHER, cls=OTHER, x=x, y=y, w=w, h=h)))
+        return pairs
 
     def _copy(self, images: List[Image]) -> "Dataset":
         new = copy.copy(self)
