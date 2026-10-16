@@ -1,0 +1,108 @@
+{
+  "emberlens_card_version": 1,
+  "created_at": "2026-10-08T00:00:00.000Z",
+  "project": {
+    "name": "Fruit stand",
+    "category": "Food"
+  },
+  "format": "coco",
+  "label_style": "joined",
+  "separator": "_",
+  "lowercase": false,
+  "root_category": "fruit",
+  "classes": [
+    "Mango",
+    "Strawberry"
+  ],
+  "sub_categories": [
+    {
+      "name": "Condition",
+      "values": [
+        "Ripe",
+        "Unripe"
+      ]
+    },
+    {
+      "name": "Type",
+      "values": [
+        "Alphonso",
+        "Kesar"
+      ]
+    }
+  ],
+  "labels": [
+    {
+      "name": "Mango_Ripe_Alphonso",
+      "class": "Mango",
+      "attributes": {
+        "Condition": "Ripe",
+        "Type": "Alphonso"
+      }
+    },
+    {
+      "name": "Mango_Unripe",
+      "class": "Mango",
+      "attributes": {
+        "Condition": "Unripe"
+      }
+    },
+    {
+      "name": "Strawberry",
+      "class": "Strawberry",
+      "attributes": {}
+    },
+    {
+      "name": "Strawberry_Ripe",
+      "class": "Strawberry",
+      "attributes": {
+        "Condition": "Ripe"
+      }
+    }
+  ],
+  "shapes": "mixed",
+  "split": {
+    "train": 0.5,
+    "val": 0.25,
+    "test": 0.25
+  },
+  "seed": 42,
+  "images": {
+    "longest_side": null,
+    "colour_space": "rgb",
+    "jpeg_quality": 90
+  },
+  "other_boxes": [
+    {
+      "image": "photo-1.jpg",
+      "x": 0.0,
+      "y": 0.0,
+      "w": 0.3,
+      "h": 0.3,
+      "score": 0.81
+    },
+    {
+      "image": "photo-2.jpg",
+      "x": 0.6,
+      "y": 0.5,
+      "w": 0.3,
+      "h": 0.4,
+      "score": 0.64
+    },
+    {
+      "image": "photo-3.jpg",
+      "x": 0.1,
+      "y": 0.1,
+      "w": 0.4,
+      "h": 0.4,
+      "score": 0.7
+    },
+    {
+      "image": "photo-4.jpg",
+      "x": 0.5,
+      "y": 0.5,
+      "w": 0.4,
+      "h": 0.4,
+      "score": 0.55
+    }
+  ]
+}
