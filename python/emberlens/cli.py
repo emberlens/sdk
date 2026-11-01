@@ -16,6 +16,7 @@ from .load import load
 EXAMPLES = """
 examples:
   ./emberlens info   fruit-stand-coco.zip
+  ./emberlens recipe "Fruit survey.emberlens-project.json"
   ./emberlens preview fruit-stand-coco.zip
   ./emberlens convert fruit-stand-coco.zip --to yolo
   ./emberlens convert fruit-stand-coco.zip --to yolo --where class=Mango --labels condition
@@ -85,6 +86,12 @@ def cmd_info(args):
     print("\nLabels in the files:")
     for name, n in ds.counts("label").items():
         print(f"    {name:<32} {n}")
+
+
+def cmd_recipe(args):
+    from .recipe import describe, load_recipe
+
+    print(describe(load_recipe(args.file)))
 
 
 def cmd_preview(args):
@@ -228,6 +235,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = with_export(sub.add_parser("info", help="show what is in an export"), labels=False, split=False)
     s.set_defaults(func=cmd_info)
+
+    s = sub.add_parser("recipe", help="show the labels in a project file")
+    s.add_argument("file", help="an .emberlens-project.json or .emberlens-invite file")
+    s.set_defaults(func=cmd_recipe)
 
     s = with_export(sub.add_parser("preview", help="make an HTML page with every photo and box"), labels=False, split=False)
     s.add_argument("--out", help="the .html file to write")

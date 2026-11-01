@@ -240,3 +240,19 @@ The app must cut each box exactly as training did: take the box, add `crop_pad` 
 The app never stops on an error: each refusal has a message and the problems one by one. A file the app does not use (for example a `.md` file) is named in a note. A failed save keeps the old model.
 
 The app refuses a file larger than 100 MB, a file that is not ONNX, a file without class names, an Emberlens or YOLO file without input size, and an unknown `emberlens_model` version. Class names that the project does not have are shown as "not in this project" and are never used on boxes.
+
+## 10. Project recipe (`.emberlens-project.json`)
+
+Schema: [`schema/emberlens-project.schema.json`](schema/emberlens-project.schema.json). Example: [`fixtures/recipe/`](fixtures/recipe/). Decision D-041.
+
+The recipe holds the labels and export settings of a shared project. It holds no photos, no cloud settings and no user data, so a person can give it to an AI or to another user.
+
+- Readers must refuse an `emberlens_project_version` they do not know.
+- `shared_id` is the same on every device in the project. Each class, sub-category and value has an `id` that is also the same on every device. A rename keeps the id.
+- `revision` goes up by 1 when the owner sends changed content. Only the owner changes a recipe.
+- A class with `retired: true` gets no new boxes, and its old boxes stay.
+- `only_for_classes` lists class ids. `null` means every class.
+- `colour` is ARGB. `split` sums to 1.
+- The app refuses a file larger than 1 MB, any id that is not a lower-case UUID, a repeated id, and a reference to an id that is not in the file. Names are one line and at most 200 characters. Text from the file is never used as a file path.
+
+**Invite (`.emberlens-invite`).** The same fields, with one optional `sync` block that holds a secret for the status relay. A recipe never has this block. A reader must not copy the block to another file.

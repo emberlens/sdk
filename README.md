@@ -204,6 +204,7 @@ Ready-made examples are in [`examples/`](examples/):
 
 | | |
 |---|---|
+| `./emberlens recipe file`, `emberlens.recipe.load_recipe(file)` | read a project file: the labels and settings of a shared project |
 | `emberlens.load(path)` | open a zip or folder; also works for plain COCO / YOLO / VOC datasets from other tools |
 | `ds.images`, `for photo in ds` | photos: `.id`, `.path`, `.width`, `.height`, `.split`, `.boxes` |
 | `box.cls`, `box.label`, `box.attributes`, `box.get("condition")` | what the box is |

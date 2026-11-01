@@ -1,0 +1,36 @@
+{
+  "emberlens_project_version": 1,
+  "about": "Emberlens project recipe. It lists the labels to collect for a dataset and the export settings. It holds no photos. Each class is one kind of object to box. Each sub-category is an extra detail of a box.",
+  "shared_id": "11111111-1111-4111-8111-111111111111",
+  "revision": 3,
+  "name": "Fruit survey",
+  "description": "Ripe and unripe fruit in markets.",
+  "category": "Food",
+  "root_category": "fruit",
+  "classes": [
+    {"id": "22222222-2222-4222-8222-222222222221", "name": "Mango", "colour": 4294198070, "order": 0, "retired": false},
+    {"id": "22222222-2222-4222-8222-222222222222", "name": "Kiwi", "colour": 4283215696, "order": 1, "retired": true}
+  ],
+  "sub_categories": [
+    {
+      "id": "33333333-3333-4333-8333-333333333331",
+      "name": "Condition",
+      "order": 0,
+      "default_value": "44444444-4444-4444-8444-444444444441",
+      "values": [
+        {"id": "44444444-4444-4444-8444-444444444441", "name": "Ripe", "order": 0, "only_for_classes": null},
+        {"id": "44444444-4444-4444-8444-444444444442", "name": "Unripe", "order": 1, "only_for_classes": ["22222222-2222-4222-8222-222222222221"]}
+      ]
+    }
+  ],
+  "export": {
+    "format": "coco",
+    "longest_side": null,
+    "colour_space": "rgb",
+    "jpeg_quality": 90,
+    "split": {"train": 0.8, "val": 0.1, "test": 0.1},
+    "label_style": "joined",
+    "separator": "_",
+    "lowercase": false
+  }
+}
