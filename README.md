@@ -164,7 +164,9 @@ You get `predictions.json`. For a detector you also get `predictions.html`, a pa
 ./emberlens export-model fruit-stand-coco-classify-model
 ```
 
-This writes one file, for example `fruit-stand-coco-classify-model.onnx` (use `--out NAME.onnx` to choose the name). The class names and the crop rule are inside the file. Send it to your iPhone (AirDrop or Files), then add it in Project settings, "Your model". It works only for a classifier, not a detector.
+This writes one file, for example `fruit-stand-coco-classify-model.onnx` (use `--out NAME.onnx` to choose the name). The class names and the crop rule are inside the file. Send it to your iPhone (AirDrop or Files), then add it in Project settings, "Your model".
+
+It works for a detector too: `./emberlens export-model fruit-stand-coco-detect-model`. A detector file looks at the whole photo and finds the boxes itself. The details of both files are in [SPEC.md](SPEC.md) section 9.
 
 **Downloads:** by default, training starts from a model that already knows everyday objects. This works much better with few photos. That starting model is downloaded once from pytorch.org: about 45 MB for `classify`, 75 MB for `detect`. Use `--no-pretrained` to avoid the download.
 

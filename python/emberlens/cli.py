@@ -268,8 +268,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-open", action="store_true", help="do not open the browser")
     s.set_defaults(func=cmd_predict)
 
-    s = sub.add_parser("export-model", help="turn a trained classifier into one .onnx file for the app (needs onnx)")
-    s.add_argument("model", help=f"the model folder from {command('train', 'classify')}")
+    s = sub.add_parser("export-model", help="turn a trained model into one .onnx file for the app (needs onnx)")
+    s.add_argument("model", help=f"the model folder from {command('train', 'classify')} or {command('train', 'detect')}")
     s.add_argument("--out", help="the .onnx file to write")
     s.set_defaults(func=cmd_export_model)
 
