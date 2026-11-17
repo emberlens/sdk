@@ -19,7 +19,7 @@ from .errors import EmberlensError
 from .model import OTHER, _n
 from .extras import require_torch
 from .crops import crop_for_model  # noqa: F401  (the shared crop rule; used through CropDataset)
-from .torch_data import CropDataset, DetectionDataset, detection_collate, need_two_labels
+from .torch_data import DETECTOR_SIZE, CropDataset, DetectionDataset, detection_collate, need_two_labels
 
 MODEL_FILE = "model.pt"
 DETECTOR_ARCH = "fasterrcnn_mobilenet_v3_large_320_fpn"
@@ -164,6 +164,15 @@ def train_classifier(
 
 
 def _detector(n_classes: int, pretrained: bool):
+    """The network takes photos already stretched to DETECTOR_SIZE (SPEC.md 9.2)."""
+    model = _detector_net(n_classes, pretrained)
+    # Inputs are already DETECTOR_SIZE x DETECTOR_SIZE: do not resize them again.
+    model.transform.min_size = (DETECTOR_SIZE,)
+    model.transform.max_size = DETECTOR_SIZE
+    return model
+
+
+def _detector_net(n_classes: int, pretrained: bool):
     from torchvision.models.detection import (
         FasterRCNN_MobileNet_V3_Large_320_FPN_Weights,
         fasterrcnn_mobilenet_v3_large_320_fpn,
@@ -232,9 +241,9 @@ def train_detector(
     data = ds.relabel(target)
     if not data.labels:
         raise EmberlensError("There are no boxes to learn from.")
-    train = DetectionDataset(data, "train", classes=data.labels)
-    val = DetectionDataset(data, "val", classes=data.labels)
-    test = DetectionDataset(data, "test", classes=data.labels)
+    train = DetectionDataset(data, "train", classes=data.labels, size=DETECTOR_SIZE)
+    val = DetectionDataset(data, "val", classes=data.labels, size=DETECTOR_SIZE)
+    test = DetectionDataset(data, "test", classes=data.labels, size=DETECTOR_SIZE)
     if len(train) == 0:
         raise EmberlensError("There are no photos in the train split. Try --split 80/10/10.")
     _seed(torch, seed)
@@ -278,6 +287,7 @@ def train_detector(
                     "emberlens_model": 1,
                     "kind": "detector",
                     "arch": DETECTOR_ARCH,
+                    "size": DETECTOR_SIZE,
                     "classes": classes,
                     "target": target,
                     "state_dict": _cpu_state(model),
@@ -348,8 +358,10 @@ def predict(model_path, images: List, threshold: float = 0.5) -> List[dict]:
                 k = int(probs.argmax())
                 results.append({"file": str(f), "label": classes[k], "score": round(float(probs[k]), 4)})
             else:
+                # Same input as the app: the whole photo stretched to S x S.
                 W, H = photo.size
-                out = model([T.ToTensor()(photo)])[0]
+                S = DETECTOR_SIZE
+                out = model([T.ToTensor()(photo.resize((S, S)))])[0]
                 boxes = []
                 for b, label, score in zip(out["boxes"].tolist(), out["labels"].tolist(), out["scores"].tolist()):
                     if score >= threshold:
@@ -357,10 +369,10 @@ def predict(model_path, images: List, threshold: float = 0.5) -> List[dict]:
                             {
                                 "label": classes[label],
                                 "score": round(score, 4),
-                                "x": b[0] / W,
-                                "y": b[1] / H,
-                                "w": (b[2] - b[0]) / W,
-                                "h": (b[3] - b[1]) / H,
+                                "x": b[0] / S,
+                                "y": b[1] / S,
+                                "w": (b[2] - b[0]) / S,
+                                "h": (b[3] - b[1]) / S,
                             }
                         )
                 results.append({"file": str(f), "width": W, "height": H, "boxes": boxes})

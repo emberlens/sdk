@@ -18,11 +18,10 @@ from typing import Callable, Dict, Optional
 from .command import command
 from .errors import EmberlensError
 from .extras import require_onnx, require_torch
-from .torch_data import IMAGENET_MEAN, IMAGENET_STD
+from .torch_data import DETECTOR_SIZE, IMAGENET_MEAN, IMAGENET_STD
 
 OPSET = 17
 RESIZE_MODE = "stretch"  # the crop rule in crops.crop_for_model
-DETECTOR_SIZE = 320  # fasterrcnn_mobilenet_v3_large_320_fpn
 DETECTOR_MIN_SCORE = 0.5  # the threshold predict uses by default
 
 
@@ -82,6 +81,7 @@ def _detector_for_onnx(model, size: int):
         def __init__(self, model, size: int):
             super().__init__()
             # The input is already SxS: the network must not resize it again.
+            # (train._detector sets the same; kept here for older model.pt files.)
             model.transform.min_size = (size,)
             model.transform.max_size = size
             self.model = model

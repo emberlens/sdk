@@ -2,6 +2,7 @@
 
     det = ds.torch_detection("train")      # for torchvision detection models
     image, target = det[0]                 # target: boxes (x0,y0,x1,y1 px), labels (1..N)
+    det = DetectionDataset(ds, "train", size=320)  # photo stretched to 320x320, as the app does
 
     cls = ds.torch_classification("train") # box crops for image classifiers
     image, label_index = cls[0]
@@ -19,6 +20,17 @@ from .model import OTHER
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
+# Detector input side (SPEC.md section 9.2): the app stretches the whole
+# photo to DETECTOR_SIZE x DETECTOR_SIZE. Training and scoring do the same.
+DETECTOR_SIZE = 320  # fasterrcnn_mobilenet_v3_large_320_fpn
+
+
+def stretch_box(box, width: int, height: int, size: int):
+    """(x0, y0, x1, y1) pixels in a width x height photo -> pixels in the photo stretched to size x size."""
+    sx, sy = size / width, size / height
+    x0, y0, x1, y1 = box
+    return (x0 * sx, y0 * sy, x1 * sx, y1 * sy)
+
 
 def detection_collate(batch):
     """Use as DataLoader(collate_fn=...) for detection datasets."""
@@ -26,7 +38,10 @@ def detection_collate(batch):
 
 
 class DetectionDataset:
-    def __init__(self, ds, split: str = "train", transforms=None, classes=None):
+    """size=None keeps each photo as it is. size=N stretches the whole photo
+    to N x N (no crop, aspect ratio not kept) and scales the boxes to match."""
+
+    def __init__(self, ds, split: str = "train", transforms=None, classes=None, size=None):
         torch, _ = require_torch()
         self._torch = torch
         self.images = [img for img in ds.images if split is None or img.split == split]
@@ -34,6 +49,7 @@ class DetectionDataset:
         self.classes = ["background"] + [n for n in names if n != "background"]
         self.index = {n: i for i, n in enumerate(self.classes)}
         self.transforms = transforms
+        self.size = size
 
     def __len__(self):
         return len(self.images)
@@ -50,6 +66,8 @@ class DetectionDataset:
             if b.label not in self.index:
                 continue
             x0, y0, x1, y1 = b.pixels(W, H)
+            if self.size:
+                x0, y0, x1, y1 = stretch_box((x0, y0, x1, y1), W, H, self.size)
             if x1 - x0 >= 1 and y1 - y0 >= 1:
                 boxes.append([x0, y0, x1, y1])
                 labels.append(self.index[b.label])
@@ -58,6 +76,8 @@ class DetectionDataset:
             "labels": torch.tensor(labels, dtype=torch.int64),
             "image_id": i,
         }
+        if self.size:
+            photo = photo.resize((self.size, self.size))
         tensor = to_tensor(photo)
         if self.transforms:
             tensor, target = self.transforms(tensor, target)
