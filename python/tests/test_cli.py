@@ -59,6 +59,17 @@ class CliTest(TempDirCase):
         self.assertEqual(code, 0)
         self.assertEqual((self.tmp / "out.txt").read_text(), "4")
 
+    def test_next_hint_quotes_a_folder_with_a_space(self):
+        from unittest import mock
+
+        with mock.patch("emberlens.train.train_classifier"):
+            code, out, _ = self.run_cli(
+                "train", "classify", str(FIXTURES / "coco_joined"), "--out", "my model"
+            )
+        self.assertEqual(code, 0)
+        self.assertIn("predict 'my model' <photo.jpg>", out)
+        self.assertIn("export-model 'my model'", out)
+
 
 if __name__ == "__main__":
     unittest.main()

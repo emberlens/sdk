@@ -20,6 +20,8 @@ def program_name(argv0: Optional[str] = None, env: Optional[Mapping[str, str]] =
     argv0 = sys.argv[0] if argv0 is None else argv0
     if not argv0 or Path(argv0).name == "__main__.py":
         return "python -m emberlens"
+    if not os.path.basename(argv0).startswith("emberlens"):
+        return "python -m emberlens"  # for example Jupyter's ipykernel_launcher.py
     found = shutil.which(os.path.basename(argv0))
     if found and os.path.realpath(found) == os.path.realpath(argv0):
         return os.path.basename(argv0)

@@ -278,6 +278,8 @@ Two optional keys are for detectors only:
 | `labels` | int64, N | 0-based index into `classes`. |
 | `scores` | float32, N | 0..1, highest first. |
 
+The file can give boxes with a score under `min_score`. Keep only the boxes with a score of `min_score` or more.
+
 N can be 0.
 
 ## 10. Project recipe (`.emberlens-project.json`)

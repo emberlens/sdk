@@ -44,6 +44,14 @@ class FindExportTest(unittest.TestCase):
         with self.assertRaisesRegex(EmberlensError, "Can't find /content/drive/MyDrive/a.zip"):
             find_export("/content/drive/MyDrive/a.zip", exists=lambda p: False)
 
+    def test_not_found_on_kaggle(self):
+        with self.assertRaisesRegex(EmberlensError, "dataset is added.*/kaggle/input/"):
+            find_export("/kaggle/input/x/a.zip", exists=lambda p: False)
+
+    def test_not_found_on_colab_mentions_drive(self):
+        with self.assertRaisesRegex(EmberlensError, "drive.mount, or use Run all"):
+            find_export("/content/drive/MyDrive/a.zip", exists=lambda p: False)
+
     def test_not_a_zip(self):
         with self.assertRaisesRegex(EmberlensError, "photo.jpg is not an export"):
             find_export("/content/drive/MyDrive/photo.jpg", exists=lambda p: True)
@@ -71,6 +79,12 @@ class ModelOutPathTest(TempDirCase):
         self.assertEqual(got.name, "a-detect.onnx")
 
 
+    def test_kaggle_folder_goes_to_working(self):
+        got = model_out_path(Path("/kaggle/input/fruit-stand"), "classify")
+        self.assertEqual(got.parent, Path("/kaggle/working"))
+        self.assertEqual(got.name, "fruit-stand-classify.onnx")
+
+
 class NotebookFileTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -90,7 +104,9 @@ class NotebookFileTest(unittest.TestCase):
             self.assertIsNone(c["execution_count"])
 
     def test_pins_the_package_version(self):
-        src = "".join(self.nb["cells"][1]["source"])
+        setup = [c for c in self.code if c["id"] == "setup"]
+        self.assertEqual(len(setup), 1)
+        src = "".join(setup[0]["source"])
         self.assertIn(f"emberlens-sdk[train,onnx]=={emberlens.__version__}", src)
 
     def test_one_edit_cell(self):
@@ -99,6 +115,14 @@ class NotebookFileTest(unittest.TestCase):
         src = "".join(editing[0]["source"])
         for name in ("KIND", "LABELS"):
             self.assertRegex(src, rf"(?m)^{name}\s*=")
+
+    def test_edit_cell_is_the_first_code_cell(self):
+        self.assertEqual(self.code[0]["id"], "paths")
+        self.assertRegex("".join(self.code[0]["source"]), r"(?m)^EXPORT_PATH\s*=")
+        intro = "".join(self.nb["cells"][0]["source"])
+        self.assertIn("first code cell", intro)
+        self.assertIn("/kaggle/input/", intro)
+        self.assertIn("Internet", intro)
 
     def test_code_cells_compile(self):
         for i, c in enumerate(self.code):
@@ -123,6 +147,22 @@ class RunTest(TempDirCase):
         self.assertEqual(out, self.tmp / "stand-classify.onnx")
         self.assertTrue(out.is_file())
         self.assertIn(f"Saved {out}. Send it to your iPhone, then add it in Project settings > Your model.", lines)
+
+    def test_zip_is_not_unzipped_next_to_itself(self):
+        src = self.tmp / "pack"
+        shutil.copytree(FIXTURES / "coco_joined", src)
+        folder = self.tmp / "drive"
+        folder.mkdir()
+        zipped = Path(shutil.make_archive(str(folder / "stand"), "zip", src))
+        shutil.rmtree(src)
+        before = set(folder.iterdir())
+        out = run(str(zipped), "classify", "class", epochs=1, pretrained=False, log=lambda m: None)
+        self.assertEqual(set(folder.iterdir()) - before, {out})
+        self.assertEqual(out.suffix, ".onnx")
+
+    def test_kind_and_labels_are_cleaned(self):
+        with self.assertRaisesRegex(EmberlensError, "Can't find /nowhere/a.zip"):
+            run("/nowhere/a.zip", "Detect ", " label ")
 
     def test_wrong_kind(self):
         with self.assertRaisesRegex(EmberlensError, "classify or detect"):

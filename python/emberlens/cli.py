@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 import webbrowser
 from pathlib import Path
@@ -121,8 +122,8 @@ def cmd_train(args):
         train_classifier(ds, out, epochs=args.epochs or 5, **common)
     else:
         train_detector(ds, out, epochs=args.epochs or 10, **common)
-    print(f"Next: {command('predict', str(out), '<photo.jpg>')}")
-    print(f"Or make the file for the app: {command('export-model', str(out))}")
+    print(f"Next: {command('predict', shlex.quote(str(out)), '<photo.jpg>')}")
+    print(f"Or make the file for the app: {command('export-model', shlex.quote(str(out)))}")
 
 
 def cmd_export_model(args):

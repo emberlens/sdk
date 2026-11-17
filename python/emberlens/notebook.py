@@ -6,6 +6,7 @@ It runs in the user's own Colab or Kaggle account and sends nothing to Emberlens
 
 from __future__ import annotations
 
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Callable, Optional
@@ -23,7 +24,7 @@ def find_export(text: str, exists: Callable[[Path], bool] = Path.exists) -> Path
     """Clean the pasted path and check that it names an export zip or folder."""
     clean = text.strip().strip("\"'").strip()
     if not clean:
-        raise EmberlensError("Paste the path of your export zip in the cell above, between the quotes.")
+        raise EmberlensError("Paste the path of your export zip in the first code cell, between the quotes.")
     if clean.lower().startswith("http"):
         raise EmberlensError(
             "Paste the file path, not a link. In the Files panel on the left, "
@@ -35,8 +36,14 @@ def find_export(text: str, exists: Callable[[Path], bool] = Path.exists) -> Path
         if exists(alt):
             path = alt
     if not exists(path):
+        if clean.startswith("/kaggle/"):
+            raise EmberlensError(
+                f"Can't find {path}. Check that the dataset is added to the notebook, "
+                "and that the path starts with /kaggle/input/."
+            )
         raise EmberlensError(
-            f"Can't find {path}. Check the name, and check that Google Drive is connected (run the first cell)."
+            f"Can't find {path}. Check the name, and check that Google Drive is connected "
+            "(run the cell with drive.mount, or use Run all)."
         )
     if not path.is_dir() and path.suffix.lower() != ".zip":
         raise EmberlensError(f"{path.name} is not an export. Use the .zip file from the Emberlens app.")
@@ -59,6 +66,8 @@ def run(
     log: Callable[[str], None] = print,
 ) -> Path:
     """Train on the export and write the .onnx file. Returns the file."""
+    kind = kind.strip().lower()
+    labels = labels.strip()
     if kind not in KINDS:
         raise EmberlensError(f"KIND is {kind!r}. Use classify or detect.")
     export = find_export(export_text)
@@ -66,10 +75,16 @@ def run(
     from .load import load
     from .train import train_classifier, train_detector
 
-    ds = load(export)
     train = train_classifier if kind == "classify" else train_detector
     out = model_out_path(export, kind)
     with tempfile.TemporaryDirectory(prefix="emberlens-") as tmp:
+        source = export
+        if export.is_file():
+            # load() unzips next to the zip. Unzip a copy, so Drive stays clean
+            # and a read-only /kaggle/input does not fail.
+            source = Path(tmp) / "export.zip"
+            shutil.copyfile(export, source)
+        ds = load(source)
         folder = train(
             ds,
             Path(tmp) / "model",

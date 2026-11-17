@@ -4,7 +4,7 @@ These steps are for the owner. Agents only prepare the text. Do them in this ord
 
 ## 1. Make the public repo (owner)
 
-1. On GitHub, create the empty public repo `emberlens/sdk`. Add no README, no licence and no .gitignore: the repo must stay empty, or the push in step 3 fails. The licence comes from the pushed `LICENSE` file.
+1. On GitHub, create the empty public repo `emberlens/sdk`. Add no README, no licence and no .gitignore: the repo must stay empty, or the push below fails. The licence comes from the pushed `LICENSE` file.
 2. In the main Emberlens repo, split out the `sdk/` folder:
 
    ```bash
@@ -33,6 +33,7 @@ These steps are for the owner. Agents only prepare the text. Do them in this ord
 3. Upload to TestPyPI first:
 
    ```bash
+   python3 -m pip install twine
    python3 -m twine upload --repository testpypi dist/*
    ```
 
@@ -59,7 +60,7 @@ Do this after step 2.
 2. Put the zip in Google Drive.
 3. Open the notebook: https://colab.research.google.com/github/emberlens/sdk/blob/main/notebooks/train.ipynb
 4. Paste the Drive path of the zip into the notebook, then choose **Run all**.
-5. Do it twice: once with `classify` and once with `detect` (see [SPEC.md](SPEC.md) section 7).
+5. Do it twice: once with `classify` and once with `detect`.
 
 Pass: a `.onnx` file appears next to the zip, and the run shows no error.
 

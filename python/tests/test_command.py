@@ -49,6 +49,10 @@ class CommandTest(unittest.TestCase):
         self.assertEqual(program_name("/a/emberlens/__main__.py", {}), "python -m emberlens")
         self.assertEqual(program_name("", {}), "python -m emberlens")
 
+    def test_notebook_kernel_is_not_the_command(self):
+        self.assertEqual(program_name("/x/ipykernel_launcher.py", {}), "python -m emberlens")
+        self.assertEqual(program_name("-c", {}), "python -m emberlens")
+
     def test_command_joins_parts(self):
         with mock.patch.dict(os.environ, {"EMBERLENS_PROG": "./emberlens"}):
             self.assertEqual(command("install", "onnx"), "./emberlens install onnx")

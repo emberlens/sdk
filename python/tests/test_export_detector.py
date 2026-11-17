@@ -118,6 +118,7 @@ class ExportDetectorTest(unittest.TestCase):
         session = onnxruntime.InferenceSession(str(self.onnx_file), providers=["CPUExecutionProvider"])
         got = session.run(None, {"input": x})
         self.assertEqual(got[0].shape, want[0].shape)
+        self.assertTrue(np.all(np.diff(got[2]) <= 0))  # raw scores: highest first
         # Boxes with equal scores may come in either order: compare both in
         # one order (score, then label, then corner).
         def ordered(out):
