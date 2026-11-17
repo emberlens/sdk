@@ -222,6 +222,8 @@ The app reads two sets of keys.
 | `std` | JSON list, e.g. `[0.229,0.224,0.225]` | yes (SDK files) | Divide per RGB channel after the mean. |
 | `labels_mode` | e.g. `class`, `label`, `condition` | no | What the classes are: the `--labels` choice used in training. |
 | `test_accuracy` | e.g. `0.88` | no | 0..1, on the export's test split. |
+| `min_score` | e.g. `0.5` | no | Detectors only (§9.2). The score the SDK uses to keep a box. |
+| `test_recall` | e.g. `0.9` | no | Detectors only (§9.2). 0..1, the share of test boxes the detector found. |
 | `trained_at` | ISO 8601 time | no | When it was trained. |
 | `source_project` | text | no | Project name from the export. |
 
@@ -240,6 +242,43 @@ The app must cut each box exactly as training did: take the box, add `crop_pad` 
 The app never stops on an error: each refusal has a message and the problems one by one. A file the app does not use (for example a `.md` file) is named in a note. A failed save keeps the old model.
 
 The app refuses a file larger than 100 MB, a file that is not ONNX, a file without class names, an Emberlens or YOLO file without input size, and an unknown `emberlens_model` version. Class names that the project does not have are shown as "not in this project" and are never used on boxes.
+
+### 9.2 Detector file
+
+A detector file (`kind` = `detector`) finds objects in a whole photo. It uses the same SDK keys as §9, with these values:
+
+| Key | Value for a detector |
+|---|---|
+| `emberlens_model` | `1` |
+| `kind` | `detector` |
+| `classes` | The class names, without `background`. |
+| `size` | `320` |
+| `input_size` | `320` (same as `size`) |
+| `crop_pad` | `0`. There is no crop: the input is the whole photo. |
+| `resize_mode` | `stretch` |
+| `mean` | `[0.0,0.0,0.0]` |
+| `std` | `[1.0,1.0,1.0]` |
+
+The network does its own normalising inside, so `mean` and `std` change nothing.
+
+Two optional keys are for detectors only:
+
+| Key | Value (text) | Meaning |
+|---|---|---|
+| `min_score` | e.g. `0.5` | The score the SDK uses to keep a box. |
+| `test_recall` | 0..1 | The share of test boxes the detector found. |
+
+**Input.** One input, `input`: 1x3x320x320, RGB, scaled to 0..1. The whole photo is stretched to 320x320. The batch size is 1.
+
+**Outputs.**
+
+| Output | Type and shape | Meaning |
+|---|---|---|
+| `boxes` | float32, N x 4 | `x1, y1, x2, y2` in input pixels, 0..320. Divide by 320 for 0..1. |
+| `labels` | int64, N | 0-based index into `classes`. |
+| `scores` | float32, N | 0..1, highest first. |
+
+N can be 0.
 
 ## 10. Project recipe (`.emberlens-project.json`)
 
