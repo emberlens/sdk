@@ -7,13 +7,22 @@ import unittest
 from pathlib import Path
 
 import emberlens
-from emberlens.errors import EmberlensError
+from emberlens.errors import EmberlensError, MissingExtra
 from emberlens.notebook import find_export, model_out_path, run
 
 from .helpers import FIXTURES, TempDirCase
 from .test_chain import ONNX, TORCH
 
 NOTEBOOK = Path(__file__).resolve().parents[2] / "notebooks" / "train.ipynb"
+
+
+class PlainErrorTest(unittest.TestCase):
+    def test_notebooks_show_only_the_message(self):
+        self.assertEqual(EmberlensError("x")._render_traceback_(), ["x"])
+
+    def test_missing_extra_does_the_same(self):
+        err = MissingExtra("train", "PyTorch")
+        self.assertEqual(err._render_traceback_(), [str(err)])
 
 
 class FindExportTest(unittest.TestCase):

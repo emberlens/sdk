@@ -6,6 +6,10 @@ from .command import command
 class EmberlensError(Exception):
     """Something the user can fix. The message says how."""
 
+    def _render_traceback_(self):
+        # IPython (Colab, Kaggle) shows this instead of a traceback.
+        return [str(self)]
+
 
 class MissingExtra(EmberlensError):
     """An optional library (Pillow, PyTorch) is not installed."""
