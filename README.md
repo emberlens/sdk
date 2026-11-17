@@ -26,6 +26,20 @@ You do not need to know Python. One command does each job.
 
 That is all. There is nothing to configure.
 
+**Two ways to get the SDK:**
+
+- **Use the launcher in this folder.** Go to section 2. Nothing else to install.
+- **Install with pip.** Make a private environment, then install:
+
+  ```bash
+  python3 -m venv ~/.emberlens
+  ~/.emberlens/bin/pip install emberlens-sdk
+  ~/.emberlens/bin/emberlens info fixtures/coco_joined
+  ```
+
+  On Windows, use `%USERPROFILE%\.emberlens\Scripts\pip` and `...\Scripts\emberlens`.
+  The commands in this guide then start with `~/.emberlens/bin/emberlens` instead of `./emberlens`.
+
 ---
 
 ## 2. First steps
@@ -157,6 +171,19 @@ You get `predictions.json`. For a detector you also get `predictions.html`, a pa
 
 **The class "other":** if the export has `other_boxes` (the app's "Add data for your model" tick), `train classify` also learns a last class called `other`: boxes that the detector finds but that are none of your objects. A label of your own may not be called "other" then.
 
+### Train in Colab or Kaggle
+
+No strong laptop? Train in the cloud with a free notebook. You need a Google (Colab) or Kaggle account.
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/emberlens/sdk/blob/main/notebooks/train.ipynb)
+
+1. Put the export zip in your Google Drive (or add it to Kaggle as a dataset).
+2. Open the notebook with the badge above.
+3. Paste the path of the zip, then choose **Run all**.
+4. When it ends, a `.onnx` file sits next to your zip. Send it to your iPhone and add it in Project settings, "Your model".
+
+The notebook is in this repo: [`notebooks/train.ipynb`](notebooks/train.ipynb).
+
 ### Put your model in the app
 
 ```bash
@@ -276,10 +303,13 @@ emberlens, emberlens.cmd        the launcher (macOS/Linux, Windows)
 python/emberlens/          the SDK (Python, no required libraries)
 python/tests/         its tests (./emberlens selftest)
 examples/             small scripts to copy
+notebooks/            the Colab and Kaggle training notebook
 schema/               JSON Schemas of emberlens.json and dataset.json
 fixtures/             sample exports made by the app's own export engine,
                       and expected/ results for checking other-language SDKs
 SPEC.md               the exact file formats, for porting the SDK
+PUBLISHING.md         steps for the owner to publish the SDK
+LICENSE               BSD 3-Clause licence
 ```
 
-**Licenses:** the SDK is part of Emberlens. The optional libraries are permissive: Pillow (MIT-CMU), PyTorch and torchvision (BSD-3).
+**Licenses:** the SDK uses the BSD 3-Clause licence (see `LICENSE`). The optional libraries are permissive: Pillow (MIT-CMU), PyTorch and torchvision (BSD-3).
