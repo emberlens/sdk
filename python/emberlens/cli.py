@@ -1,4 +1,4 @@
-"""The `emberlens` command. Run `./emberlens help` for the list."""
+"""The `emberlens` command. Run `emberlens help` for the list."""
 
 from __future__ import annotations
 
@@ -10,39 +10,28 @@ from pathlib import Path
 from typing import List, Optional
 
 from . import __version__
+from .command import command, program_name
 from .errors import MissingExtra, EmberlensError
 from .load import load
+from .paths import export_stem, free_path
 
-EXAMPLES = """
+_EXAMPLES = """
 examples:
-  ./emberlens info   fruit-stand-coco.zip
-  ./emberlens recipe "Fruit survey.emberlens-project.json"
-  ./emberlens preview fruit-stand-coco.zip
-  ./emberlens convert fruit-stand-coco.zip --to yolo
-  ./emberlens convert fruit-stand-coco.zip --to yolo --where class=Mango --labels condition
-  ./emberlens crops  fruit-stand-coco.zip
-  ./emberlens train classify fruit-stand-coco.zip --labels condition
-  ./emberlens train detect   fruit-stand-coco.zip
-  ./emberlens export-model fruit-stand-coco-classify-model
-  ./emberlens predict fruit-stand-coco-classify-model photo.jpg
+  {prog} info   fruit-stand-coco.zip
+  {prog} recipe "Fruit survey.emberlens-project.json"
+  {prog} preview fruit-stand-coco.zip
+  {prog} convert fruit-stand-coco.zip --to yolo
+  {prog} convert fruit-stand-coco.zip --to yolo --where class=Mango --labels condition
+  {prog} crops  fruit-stand-coco.zip
+  {prog} train classify fruit-stand-coco.zip --labels condition
+  {prog} train detect   fruit-stand-coco.zip
+  {prog} export-model fruit-stand-coco-classify-model
+  {prog} predict fruit-stand-coco-classify-model photo.jpg
 """
 
 
-def _free(path: Path) -> Path:
-    """`path`, or path-2, path-3 … if it already exists."""
-    if not path.exists():
-        return path
-    n = 2
-    while True:
-        cand = path.with_name(f"{path.stem}-{n}{path.suffix}")
-        if not cand.exists():
-            return cand
-        n += 1
-
-
-def _stem(export: str) -> str:
-    p = Path(export.rstrip("/\\"))
-    return p.stem if p.suffix.lower() == ".zip" else p.name
+def examples() -> str:
+    return _EXAMPLES.format(prog=program_name())
 
 
 def _parse_split(text: str):
@@ -96,7 +85,7 @@ def cmd_recipe(args):
 
 def cmd_preview(args):
     ds = _dataset(args)
-    out = Path(args.out) if args.out else _free(Path(f"{_stem(args.export)}-preview.html"))
+    out = Path(args.out) if args.out else free_path(Path(f"{export_stem(args.export)}-preview.html"))
     path = ds.preview(out)
     print(f"Wrote {path}")
     if not args.no_open:
@@ -107,17 +96,17 @@ def cmd_convert(args):
     ds = _dataset(args)
     fmt = args.to.lower()
     if fmt == "json":
-        out = Path(args.out) if args.out else _free(Path(f"{_stem(args.export)}.json"))
+        out = Path(args.out) if args.out else free_path(Path(f"{export_stem(args.export)}.json"))
         print(f"Wrote {ds.to_json(out)}")
         return
-    out = Path(args.out) if args.out else _free(Path(f"{_stem(args.export)}-{fmt}"))
+    out = Path(args.out) if args.out else free_path(Path(f"{export_stem(args.export)}-{fmt}"))
     path = getattr(ds, f"to_{fmt}")(out)
     print(f"Wrote {len(ds)} photos, {ds.box_count} boxes to {path}")
 
 
 def cmd_crops(args):
     ds = _dataset(args)
-    out = Path(args.out) if args.out else _free(Path(f"{_stem(args.export)}-crops"))
+    out = Path(args.out) if args.out else free_path(Path(f"{export_stem(args.export)}-crops"))
     ds.crops(out, padding=args.pad, size=args.size)
 
 
@@ -126,22 +115,21 @@ def cmd_train(args):
 
     ds = _dataset(argparse.Namespace(**{**vars(args), "labels": None}))
     target = args.labels or "label"
-    out = Path(args.out) if args.out else _free(Path(f"{_stem(args.export)}-{args.kind}-model"))
+    out = Path(args.out) if args.out else free_path(Path(f"{export_stem(args.export)}-{args.kind}-model"))
     common = dict(target=target, pretrained=not args.no_pretrained, device=args.device)
     if args.kind == "classify":
         train_classifier(ds, out, epochs=args.epochs or 5, **common)
     else:
         train_detector(ds, out, epochs=args.epochs or 10, **common)
-    print(f"Next: ./emberlens predict {out} <photo.jpg>")
-    if args.kind == "classify":
-        print(f"Or make the file for the app: ./emberlens export-model {out}")
+    print(f"Next: {command('predict', str(out), '<photo.jpg>')}")
+    print(f"Or make the file for the app: {command('export-model', str(out))}")
 
 
 def cmd_export_model(args):
     from .export_model import export_model
 
     model = Path(args.model).expanduser()
-    out = Path(args.out) if args.out else _free(Path(f"{model.name or 'model'}.onnx"))
+    out = Path(args.out) if args.out else free_path(Path(f"{model.name or 'model'}.onnx"))
     path = export_model(model, out)
     print(f"Send {path.name} to your iPhone (AirDrop or Files), then add it in Project settings > Your model.")
 
@@ -151,7 +139,7 @@ def cmd_predict(args):
     from .train import predict
 
     results = predict(args.model, args.images, threshold=args.threshold)
-    out = Path(args.out) if args.out else _free(Path("predictions.json"))
+    out = Path(args.out) if args.out else free_path(Path("predictions.json"))
     out.write_text(json.dumps(results, indent=2), encoding="utf-8")
     for r in results:
         if "label" in r:
@@ -193,11 +181,18 @@ def cmd_run(args):
     runpy.run_path(str(script), run_name="__main__")
 
 
+def _tests_folder() -> Path:
+    return Path(__file__).resolve().parent.parent / "tests"
+
+
 def cmd_selftest(args):
     """Check that the SDK works on this computer."""
     import unittest
 
-    tests = Path(__file__).resolve().parent.parent / "tests"
+    tests = _tests_folder()
+    if not tests.is_dir():
+        print(f"The Emberlens SDK {__version__} is installed. The full checks come with the source code.")
+        return
     suite = unittest.defaultTestLoader.discover(str(tests), top_level_dir=str(tests.parent))
     result = unittest.TextTestRunner(verbosity=1).run(suite)
     if not result.wasSuccessful():
@@ -216,9 +211,9 @@ def cmd_install(args):
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="emberlens",
+        prog=program_name(),
         description="Use your Emberlens exports for training. EXPORT is the .zip from the app (or its folder).",
-        epilog=EXAMPLES,
+        epilog=examples(),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--version", action="version", version=f"emberlens-sdk {__version__}")
@@ -266,7 +261,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_train)
 
     s = sub.add_parser("predict", help="run a trained model on photos")
-    s.add_argument("model", help="the model folder from ./emberlens train")
+    s.add_argument("model", help=f"the model folder from {command('train')}")
     s.add_argument("images", nargs="+", help="one or more photos")
     s.add_argument("--threshold", type=float, default=0.5, help="detector: lowest score to keep (0..1)")
     s.add_argument("--out", help="the .json file to write")
@@ -274,7 +269,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.set_defaults(func=cmd_predict)
 
     s = sub.add_parser("export-model", help="turn a trained classifier into one .onnx file for the app (needs onnx)")
-    s.add_argument("model", help="the model folder from ./emberlens train classify")
+    s.add_argument("model", help=f"the model folder from {command('train', 'classify')}")
     s.add_argument("--out", help="the .onnx file to write")
     s.set_defaults(func=cmd_export_model)
 

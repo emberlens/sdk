@@ -1,10 +1,10 @@
 """Turn a trained classifier into one standard .onnx file for the app.
 
-    ./emberlens export-model MODEL-FOLDER [--out FILE.onnx]
+    emberlens export-model MODEL-FOLDER [--out FILE.onnx]
 
 The class names and the crop rule go into the ONNX metadata (sdk/SPEC.md
 section 9), so the app needs no hard-coded numbers. Needs PyTorch and the
-optional `onnx` library (./emberlens install onnx).
+optional `onnx` library (emberlens install onnx).
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 from typing import Callable, Dict, Optional
 
+from .command import command
 from .errors import EmberlensError
 from .extras import require_onnx, require_torch
 from .torch_data import IMAGENET_MEAN, IMAGENET_STD
@@ -51,7 +52,7 @@ def export_model(model_folder, out=None, log: Callable[[str], None] = print) -> 
     folder = Path(model_folder).expanduser()
     model, ckpt = load_model(folder)
     if ckpt.get("kind") != "classifier":
-        raise EmberlensError("export-model works on a classifier (./emberlens train classify). Detectors are not supported yet.")
+        raise EmberlensError(f"export-model works on a classifier ({command('train', 'classify')}). Detectors are not supported yet.")
     report = None
     report_file = (folder if folder.is_dir() else folder.parent) / "report.json"
     if report_file.is_file():

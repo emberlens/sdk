@@ -37,5 +37,6 @@ if [ ! -x "$PY" ]; then
   fi
 fi
 
+export EMBERLENS_PROG=./emberlens
 export PYTHONPATH="$HERE/python${PYTHONPATH:+:$PYTHONPATH}"
 exec "$PY" -m emberlens "$@"

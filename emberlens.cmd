@@ -22,5 +22,6 @@ if not exist "%PY%" (
   exit /b 1
 )
 
+set "EMBERLENS_PROG=emberlens.cmd"
 set "PYTHONPATH=%HERE%python;%PYTHONPATH%"
 "%PY%" -m emberlens %*

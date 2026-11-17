@@ -166,7 +166,7 @@ class ExportMetadataTest(TempDirCase):
 
         with self.assertRaises(MissingExtra) as ctx:
             export_model(self.tmp)
-        self.assertIn("./emberlens install onnx", str(ctx.exception))
+        self.assertIn("install onnx", str(ctx.exception))
 
 
 @TORCH

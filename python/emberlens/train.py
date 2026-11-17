@@ -14,6 +14,7 @@ import random
 from pathlib import Path
 from typing import Callable, List, Optional
 
+from .command import command
 from .errors import EmberlensError
 from .model import OTHER, _n
 from .extras import require_torch
@@ -307,7 +308,7 @@ def load_model(path):
     if p.is_dir():
         p = p / MODEL_FILE
     if not p.is_file():
-        raise EmberlensError(f"Can't find a model at {p}. Train one first with: ./emberlens train")
+        raise EmberlensError(f"Can't find a model at {p}. Train one first with: {command('train')}")
     ckpt = torch.load(p, map_location="cpu", weights_only=True)
     if ckpt.get("kind") == "classifier":
         model = _classifier(tv, len(ckpt["classes"]), pretrained=False)
