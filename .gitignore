@@ -7,3 +7,5 @@ python/.venv/
 *-model*/
 predictions*.json
 predictions*.html
+python/dist/
+python/build/

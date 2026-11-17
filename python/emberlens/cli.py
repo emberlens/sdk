@@ -185,12 +185,17 @@ def _tests_folder() -> Path:
     return Path(__file__).resolve().parent.parent / "tests"
 
 
+def _is_sdk_tests(tests: Path) -> bool:
+    """True only for the SDK's own tests, not another package's `tests` folder in site-packages."""
+    return (tests / "test_command.py").is_file() and (tests / "helpers.py").is_file()
+
+
 def cmd_selftest(args):
     """Check that the SDK works on this computer."""
     import unittest
 
     tests = _tests_folder()
-    if not tests.is_dir():
+    if not (tests.is_dir() and _is_sdk_tests(tests)):
         print(f"The Emberlens SDK {__version__} is installed. The full checks come with the source code.")
         return
     suite = unittest.defaultTestLoader.discover(str(tests), top_level_dir=str(tests.parent))

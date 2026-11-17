@@ -11,5 +11,5 @@ See sdk/README.md for the full guide.
 from .model import Box, Dataset, Image
 from .load import load
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["Box", "Dataset", "Image", "load", "__version__"]

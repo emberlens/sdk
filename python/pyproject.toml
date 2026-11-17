@@ -1,24 +1,38 @@
+# pip install emberlens-sdk
 # Optional: install the SDK into your own Python with
 #   pip install -e "sdk/python"            (core: no extra libraries)
 #   pip install -e "sdk/python[train]"     (with Pillow, PyTorch, torchvision)
 #   pip install -e "sdk/python[onnx]"      (adds onnx, for export-model)
 # Most users do not need this: the ./emberlens launcher sets everything up.
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "emberlens-sdk"
-version = "0.1.0"
+version = "0.2.0"
 description = "Open Emberlens exports (COCO, YOLO, Pascal VOC) and use them for training."
 requires-python = ">=3.9"
-license = { text = "BSD-3-Clause" }
+readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+keywords = ["computer vision", "dataset", "coco", "yolo", "pascal voc", "onnx", "emberlens"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
 dependencies = []
 
 [project.optional-dependencies]
 images = ["pillow"]
 train = ["pillow", "torch", "torchvision"]
 onnx = ["onnx"]
+
+[project.urls]
+Homepage = "https://emberlens.app"
+Source = "https://github.com/emberlens/sdk"
 
 [project.scripts]
 emberlens = "emberlens.cli:main"
