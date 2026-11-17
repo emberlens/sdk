@@ -4,7 +4,7 @@ These steps are for the owner. Agents only prepare the text. Do them in this ord
 
 ## 1. Make the public repo (owner)
 
-1. On GitHub, create the empty public repo `emberlens/sdk`. Choose the BSD 3-Clause licence. Add no README.
+1. On GitHub, create the empty public repo `emberlens/sdk`. Add no README, no licence and no .gitignore: the repo must stay empty, or the push in step 3 fails. The licence comes from the pushed `LICENSE` file.
 2. In the main Emberlens repo, split out the `sdk/` folder:
 
    ```bash
